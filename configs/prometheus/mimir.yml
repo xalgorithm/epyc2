@@ -1,0 +1,46 @@
+target: all,alertmanager
+
+server:
+  http_listen_port: 8080
+  grpc_listen_port: 9095
+  
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /data
+      
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/blocks
+    
+compactor:
+  data_dir: /data/compactor
+  sharding_ring:
+    kvstore:
+      store: inmemory
+      
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+      
+ingester:
+  ring:
+    kvstore:
+      store: inmemory
+    replication_factor: 1
+    
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/ruler
+    
+alertmanager_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/alertmanager
+    
+activity_tracker:
+  filepath: /data/activity.log

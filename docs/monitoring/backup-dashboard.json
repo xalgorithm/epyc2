@@ -1,0 +1,571 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Kubernetes Backup Monitoring",
+    "tags": ["kubernetes", "backup", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Backup Status Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "k8s_data_backup_last_success_timestamp",
+            "legendFormat": "Last Data Backup",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "dateTimeFromNow",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 86400},
+                {"color": "red", "value": 172800}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Total Backup Size",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "k8s_data_backup_size_bytes",
+            "legendFormat": "Total Backup Size",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1073741824},
+                {"color": "red", "value": 5368709120}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Resource Files Count",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "k8s_data_backup_resources_count",
+            "legendFormat": "Resource Files",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Application Backup Success Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "netalertx_backup_success",
+            "legendFormat": "NetAlertX",
+            "refId": "A"
+          },
+          {
+            "expr": "grafana_backup_success",
+            "legendFormat": "Grafana",
+            "refId": "B"
+          },
+          {
+            "expr": "prometheus_backup_success",
+            "legendFormat": "Prometheus",
+            "refId": "C"
+          },
+          {
+            "expr": "loki_backup_success",
+            "legendFormat": "Loki",
+            "refId": "D"
+          },
+          {
+            "expr": "mimir_backup_success",
+            "legendFormat": "Mimir",
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {"text": "Failed", "color": "red"},
+                  "1": {"text": "Success", "color": "green"}
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 6}
+      },
+      {
+        "id": 5,
+        "title": "Application Backup Sizes",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "netalertx_backup_database_size_bytes",
+            "legendFormat": "NetAlertX DB",
+            "refId": "A"
+          },
+          {
+            "expr": "grafana_backup_database_size_bytes",
+            "legendFormat": "Grafana DB",
+            "refId": "B"
+          },
+          {
+            "expr": "prometheus_backup_size_bytes",
+            "legendFormat": "Prometheus",
+            "refId": "C"
+          },
+          {
+            "expr": "loki_backup_size_bytes",
+            "legendFormat": "Loki",
+            "refId": "D"
+          },
+          {
+            "expr": "mimir_backup_size_bytes",
+            "legendFormat": "Mimir",
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 12}
+      },
+      {
+        "id": 6,
+        "title": "Backup Job Success Rate (24h)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "increase(kube_job_status_succeeded{job_name=~\".*backup.*\"}[1h])",
+            "legendFormat": "Successful Jobs - {{job_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "increase(kube_job_status_failed{job_name=~\".*backup.*\"}[1h])",
+            "legendFormat": "Failed Jobs - {{job_name}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "never",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18}
+      },
+      {
+        "id": 7,
+        "title": "Backup Job Duration",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "kube_job_status_completion_time{job_name=~\".*backup.*\"} - kube_job_status_start_time{job_name=~\".*backup.*\"}",
+            "legendFormat": "Duration - {{job_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18}
+      },
+      {
+        "id": 8,
+        "title": "Backup File Count Trend",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "backup_files_total",
+            "legendFormat": "Backup Files - {{type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "backup_directories_total",
+            "legendFormat": "Backup Directories - {{type}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26}
+      },
+      {
+        "id": 9,
+        "title": "Backup Storage Usage Trend",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "backup_storage_bytes",
+            "legendFormat": "Backup Storage - {{type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "node_filesystem_avail_bytes{mountpoint=\"/host/backup\"}",
+            "legendFormat": "Available Storage",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26}
+      },
+      {
+        "id": 10,
+        "title": "Failed Backup Jobs (Last 7 Days)",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "kube_job_status_failed{job_name=~\".*backup.*\"} > 0",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        },
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "__name__": true,
+                "Time": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "job_name": "Job Name",
+                "namespace": "Namespace",
+                "Value": "Failed Count"
+              }
+            }
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 34}
+      },
+      {
+        "id": 11,
+        "title": "Backup Schedule Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "kube_cronjob_next_schedule_time{cronjob=~\".*backup.*\"}",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "__name__": true,
+                "Time": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "cronjob": "Backup Job",
+                "namespace": "Namespace",
+                "Value": "Next Scheduled Time"
+              }
+            }
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 34}
+      },
+      {
+        "id": 12,
+        "title": "Backup Duration Trend",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "k8s_data_backup_duration_seconds",
+            "legendFormat": "Data Backup Duration",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 42}
+      },
+      {
+        "id": 13,
+        "title": "Application Backup File Counts",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "backup_application_files",
+            "legendFormat": "{{application}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 42}
+      }
+    ],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "refresh": "5m",
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Backup Jobs",
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(kube_job_status_start_time{job_name=~\".*backup.*\"}[5m]) > 0",
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "titleFormat": "Backup Job Started",
+          "textFormat": "{{job_name}} started"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,135 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+.terraform/
+.terraform.lock.hcl
+tfplan
+crash.log
+crash.*.log
+
+# SSH Keys
+*.pem
+*.key
+*-rsa
+*-rsa.pub
+id_*
+!*.pub.example
+
+# Logs
+*.log
+logs/
+
+# Backup files
+*.backup
+*.backup.*
+*.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Archive files
+*.tar.gz
+*.zip
+*.tar
+*.gz
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Kubernetes config files (may contain sensitive data)
+kubeconfig
+*.kubeconfig
+
+# Proxmox specific
+*.qcow2
+*.iso
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Local test files
+test-*
+debug-*
+temp-*
+
+# Documentation build files
+docs/_build/
+docs/.doctrees/
+
+# Ansible
+*.retry
+
+# Helm
+charts/*.tgz
+
+# Local development
+local/
+dev/
+development/
+
+# Secrets and sensitive files
+secrets/
+*.secret
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Terraform provider cache
+.terraform.d/
+
+# Local Terraform modules
+.terraform/modules/
+
+# Terraform plan files
+*.tfplan
+
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include override files you do wish to add to version control using negated pattern
+# !example_override.tf
