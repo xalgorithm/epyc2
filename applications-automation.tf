@@ -1,5 +1,9 @@
-# N8N Workflow Automation
-# Deploys n8n workflow automation tool in the automation namespace
+# Automation Applications
+# This file contains workflow automation applications (n8n)
+
+# =============================================================================
+# Automation Namespace
+# =============================================================================
 
 # Automation Namespace
 resource "kubernetes_namespace" "automation" {
@@ -12,6 +16,10 @@ resource "kubernetes_namespace" "automation" {
     }
   }
 }
+
+# =============================================================================
+# N8N Workflow Automation
+# =============================================================================
 
 # N8N Storage PVC
 resource "kubernetes_persistent_volume_claim" "n8n_storage" {
@@ -225,55 +233,6 @@ resource "kubernetes_service" "n8n" {
     selector = {
       app = "n8n"
     }
-  }
-}
-
-# N8N Ingress
-resource "kubernetes_ingress_v1" "n8n" {
-  depends_on = [kubernetes_service.n8n]
-
-  metadata {
-    name      = "n8n"
-    namespace = "automation"
-    annotations = {
-      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
-    }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-
-    rule {
-      host = "automate.home"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.n8n.metadata[0].name
-              port {
-                number = 5678
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# Output N8N information
-output "n8n_info" {
-  description = "N8N access information"
-  value = {
-    url         = "http://automate.home"
-    username    = "admin"
-    password    = "automate"
-    namespace   = "automation"
-    ingress_ip  = "192.168.0.35"
   }
 }
 

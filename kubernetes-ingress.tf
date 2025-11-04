@@ -1,32 +1,9 @@
-# Ingress Controller and Ingress objects
+# Kubernetes Ingress Resources
+# This file contains all Ingress resource definitions for services
 
-# NGINX Ingress Controller via Helm
-resource "helm_release" "ingress_nginx" {
-  name       = "ingress-nginx"
-  namespace  = "ingress-nginx"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  wait       = true
-  timeout    = 900
-
-  create_namespace = true
-
-  set {
-    name  = "controller.service.type"
-    value = "LoadBalancer"
-  }
-
-  set {
-    name  = "controller.service.loadBalancerIP"
-    value = var.ingress_ip
-  }
-
-  depends_on = [
-    null_resource.kubeconfig_ready,
-    null_resource.cluster_api_ready,
-    null_resource.metallb_operational
-  ]
-}
+# =============================================================================
+# Monitoring Ingress Resources
+# =============================================================================
 
 # Grafana Ingress
 resource "kubernetes_ingress_v1" "grafana" {
@@ -170,6 +147,10 @@ resource "kubernetes_ingress_v1" "mimir" {
   ]
 }
 
+# =============================================================================
+# Application Ingress Resources
+# =============================================================================
+
 # Mylar Ingress
 resource "kubernetes_ingress_v1" "mylar" {
   metadata {
@@ -204,4 +185,40 @@ resource "kubernetes_ingress_v1" "mylar" {
   ]
 }
 
+# N8N Ingress
+resource "kubernetes_ingress_v1" "n8n" {
+  depends_on = [kubernetes_service.n8n]
+
+  metadata {
+    name      = "n8n"
+    namespace = "automation"
+    annotations = {
+      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = "automate.home"
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.n8n.metadata[0].name
+              port {
+                number = 5678
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 

@@ -198,16 +198,3 @@ resource "kubernetes_service" "syslog_ng" {
     kubernetes_deployment.syslog_ng
   ]
 }
-
-# Output syslog service information
-output "opnsense_logging_info" {
-  description = "OPNsense logging integration information"
-  value = {
-    syslog_ip           = var.syslog_ip
-    syslog_udp_port     = 514
-    syslog_tcp_port     = 514
-    loki_endpoint       = "http://loki.monitoring.svc.cluster.local:3100"
-    grafana_explore_url = "http://grafana.home/explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bapplication%3D%5C%22opnsense%5C%22%7D%22%7D%5D"
-  }
-}
-

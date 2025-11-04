@@ -71,7 +71,8 @@ nfs_backup_path = "/data/kubernetes/backups"
 │   ├── deployment/               # Deployment guides
 │   ├── backup/                   # Backup documentation
 │   ├── monitoring/               # Monitoring setup
-│   └── troubleshooting/          # Troubleshooting guides
+│   ├── troubleshooting/          # Troubleshooting guides
+│   └── TERRAFORM_STRUCTURE.md    # Terraform organization guide
 ├── scripts/                      # Automation scripts
 │   ├── deployment/               # Deployment scripts
 │   ├── backup/                   # Backup and restore scripts
@@ -89,14 +90,34 @@ nfs_backup_path = "/data/kubernetes/backups"
 
 ### Infrastructure (Terraform)
 
-- **`main.tf`**: Main Terraform configuration
-- **`proxmox-vms.tf`**: VM definitions and provisioning
-- **`k8s-cluster.tf`**: Kubernetes cluster setup
-- **`metallb.tf`**: Load balancer configuration
-- **`observability.tf`**: Monitoring stack deployment
+The Terraform configuration is organized following best practices with clear separation of concerns:
 
-- **`backup.tf`**: Backup system configuration
-- **`ingress.tf`**: Ingress controller setup
+#### Core Configuration
+- **`versions.tf`**: Terraform and provider version requirements
+- **`providers.tf`**: Provider configurations
+- **`variables.tf`**: Input variable declarations
+- **`outputs.tf`**: Output value declarations
+- **`backend.tf`**: Backend configuration
+
+#### Infrastructure Layer
+- **`infrastructure-proxmox.tf`**: VM definitions and provisioning
+- **`infrastructure-network.tf`**: MetalLB and Ingress controller
+
+#### Kubernetes Platform
+- **`kubernetes-cluster.tf`**: Cluster bootstrapping and setup
+- **`kubernetes-storage.tf`**: NFS storage configuration
+- **`kubernetes-ingress.tf`**: Ingress resource definitions
+
+#### Monitoring & Backup
+- **`monitoring.tf`**: Prometheus, Grafana, Loki, Mimir stack
+- **`backup.tf`**: Backup system and CronJobs
+- **`opnsense-logging.tf`**: OPNsense log integration
+
+#### Applications
+- **`applications-media.tf`**: Media applications (Mylar)
+- **`applications-automation.tf`**: Automation tools (N8N)
+
+See [TERRAFORM_STRUCTURE.md](docs/TERRAFORM_STRUCTURE.md) for detailed information
 
 ### Key Features
 

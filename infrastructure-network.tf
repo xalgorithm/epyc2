@@ -1,4 +1,9 @@
-# MetalLB Load Balancer for Kubernetes
+# Network Infrastructure Configuration
+# This file contains MetalLB load balancer and Ingress controller configuration
+
+# =============================================================================
+# MetalLB Load Balancer Configuration
+# =============================================================================
 
 # Create MetalLB namespace via kubectl to avoid API validation during plan
 resource "null_resource" "metallb_namespace" {
@@ -124,3 +129,36 @@ resource "null_resource" "metallb_operational" {
     null_resource.metallb_l2advertisement
   ]
 }
+
+# =============================================================================
+# Ingress Controller Configuration
+# =============================================================================
+
+# NGINX Ingress Controller via Helm
+resource "helm_release" "ingress_nginx" {
+  name       = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  wait       = true
+  timeout    = 900
+
+  create_namespace = true
+
+  set {
+    name  = "controller.service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "controller.service.loadBalancerIP"
+    value = var.ingress_ip
+  }
+
+  depends_on = [
+    null_resource.kubeconfig_ready,
+    null_resource.cluster_api_ready,
+    null_resource.metallb_operational
+  ]
+}
+

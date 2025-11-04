@@ -1,3 +1,10 @@
+# Kubernetes Cluster Bootstrap Configuration
+# This file handles the bootstrapping and configuration of the Kubernetes cluster
+
+# =============================================================================
+# Kubeconfig Preparation
+# =============================================================================
+
 # Ensure kubeconfig directory exists and create placeholder if needed
 resource "null_resource" "prepare_kubeconfig" {
   provisioner "local-exec" {
@@ -24,10 +31,14 @@ resource "null_resource" "prepare_kubeconfig" {
   }
 }
 
+# =============================================================================
+# VM Initialization
+# =============================================================================
+
 # Wait for VMs to be fully ready
 resource "null_resource" "wait_for_vms" {
   count = var.bootstrap_cluster ? 1 : 0
-  
+
   depends_on = [
     proxmox_virtual_environment_vm.bumblebee,
     proxmox_virtual_environment_vm.prime,
@@ -48,10 +59,15 @@ resource "null_resource" "wait_for_vms" {
   }
 }
 
+# =============================================================================
+# Control Plane Setup
+# =============================================================================
+
 # Remote execution for control plane setup
 resource "null_resource" "control_plane_setup" {
   count      = var.bootstrap_cluster ? 1 : 0
   depends_on = [null_resource.wait_for_vms]
+
   connection {
     type        = "ssh"
     host        = var.control_plane_ip
@@ -129,6 +145,10 @@ resource "null_resource" "control_plane_setup" {
     k8s_version      = var.k8s_version
   }
 }
+
+# =============================================================================
+# Worker Node Setup
+# =============================================================================
 
 # Remote execution for worker nodes setup
 resource "null_resource" "worker_setup" {
@@ -214,6 +234,10 @@ resource "null_resource" "worker_setup" {
   }
 }
 
+# =============================================================================
+# Kubeconfig Management
+# =============================================================================
+
 # Copy kubeconfig locally
 resource "null_resource" "copy_kubeconfig" {
   count      = var.bootstrap_cluster ? 1 : 0
@@ -245,6 +269,10 @@ resource "null_resource" "kubeconfig_ready" {
   }
 }
 
+# =============================================================================
+# Cluster API Readiness Check
+# =============================================================================
+
 # Gate: API server reachable using current kubeconfig
 resource "null_resource" "cluster_api_ready" {
   provisioner "local-exec" {
@@ -257,3 +285,4 @@ resource "null_resource" "cluster_api_ready" {
     null_resource.worker_setup
   ]
 }
+

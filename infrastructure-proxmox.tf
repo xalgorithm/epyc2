@@ -1,23 +1,9 @@
-# Proxmox VM Creation Configuration
-# This file creates the VMs needed for the Kubernetes cluster using bpg/proxmox provider
+# Proxmox Infrastructure Configuration
+# This file creates and manages the VMs needed for the Kubernetes cluster
 
-# Proxmox Provider Configuration
-provider "proxmox" {
-  endpoint = var.proxmox_api_url
-
-  # Use API token if provided, otherwise fall back to username/password
-  api_token = var.proxmox_api_token_id != "" ? "${var.proxmox_api_token_id}=${var.proxmox_api_token_secret}" : null
-  username  = var.proxmox_api_token_id != "" ? null : var.proxmox_user
-  password  = var.proxmox_api_token_id != "" ? null : var.proxmox_password
-
-  insecure = var.proxmox_tls_insecure
-
-  # SSH configuration for file uploads (cloud-init, snippets, etc.)
-  ssh {
-    agent    = true
-    username = var.nfs_ssh_user != "" ? var.nfs_ssh_user : "root"
-  }
-}
+# =============================================================================
+# Proxmox Snippets Directory Setup
+# =============================================================================
 
 # Ensure snippets directory exists on Proxmox host
 # Note: This requires passwordless sudo or the directory to already exist
@@ -31,10 +17,14 @@ resource "null_resource" "create_snippets_directory" {
   }
 }
 
+# =============================================================================
+# Cloud-Init Configuration Files
+# =============================================================================
+
 # Cloud-init user data for control plane (bumblebee)
 resource "proxmox_virtual_environment_file" "cloud_init_bumblebee" {
   depends_on = [null_resource.create_snippets_directory]
-  
+
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.proxmox_node
@@ -69,7 +59,7 @@ resource "proxmox_virtual_environment_file" "cloud_init_bumblebee" {
 # Cloud-init user data for worker 1 (prime)
 resource "proxmox_virtual_environment_file" "cloud_init_prime" {
   depends_on = [null_resource.create_snippets_directory]
-  
+
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.proxmox_node
@@ -104,7 +94,7 @@ resource "proxmox_virtual_environment_file" "cloud_init_prime" {
 # Cloud-init user data for worker 2 (wheeljack)
 resource "proxmox_virtual_environment_file" "cloud_init_wheeljack" {
   depends_on = [null_resource.create_snippets_directory]
-  
+
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.proxmox_node
@@ -135,6 +125,10 @@ resource "proxmox_virtual_environment_file" "cloud_init_wheeljack" {
     file_name = "cloud-init-wheeljack.yaml"
   }
 }
+
+# =============================================================================
+# Virtual Machine Definitions
+# =============================================================================
 
 # Control Plane VM - Bumblebee (VM ID 100)
 resource "proxmox_virtual_environment_vm" "bumblebee" {
@@ -337,30 +331,3 @@ resource "proxmox_virtual_environment_vm" "wheeljack" {
   }
 }
 
-# Output VM information
-output "vm_info" {
-  description = "Created VM information"
-  value = {
-    bumblebee = {
-      vm_id = proxmox_virtual_environment_vm.bumblebee.vm_id
-      name  = proxmox_virtual_environment_vm.bumblebee.name
-      ip    = var.control_plane_ip
-      role  = "control-plane"
-      disk  = "256GB"
-    }
-    prime = {
-      vm_id = proxmox_virtual_environment_vm.prime.vm_id
-      name  = proxmox_virtual_environment_vm.prime.name
-      ip    = var.worker_ips[0]
-      role  = "worker"
-      disk  = "256GB"
-    }
-    wheeljack = {
-      vm_id = proxmox_virtual_environment_vm.wheeljack.vm_id
-      name  = proxmox_virtual_environment_vm.wheeljack.name
-      ip    = var.worker_ips[1]
-      role  = "worker"
-      disk  = "256GB"
-    }
-  }
-}

@@ -35,8 +35,8 @@ echo "╚═══════════════════════�
 echo ""
 
 # Check if we're in the right directory
-if [ ! -f "proxmox-vms.tf" ]; then
-    print_error "proxmox-vms.tf not found. Please run from terraform directory."
+if [ ! -f "infrastructure-proxmox.tf" ]; then
+    print_error "infrastructure-proxmox.tf not found. Please run from terraform directory."
     exit 1
 fi
 

@@ -1,9 +1,14 @@
-# Mylar Deployment with NFS Mount
-# Mylar is a comic book manager/downloader
+# Media Applications
+# This file contains media-related application deployments (Mylar)
 
-# Create namespace for Mylar
-resource "kubernetes_namespace" "mylar" {
+# =============================================================================
+# Media Namespace
+# =============================================================================
+
+# Create namespace for Media applications
+resource "kubernetes_namespace" "media" {
   depends_on = [null_resource.kubeconfig_ready, null_resource.cluster_api_ready]
+
   metadata {
     name = "media"
     labels = {
@@ -12,9 +17,13 @@ resource "kubernetes_namespace" "mylar" {
   }
 }
 
+# =============================================================================
+# Mylar - Comic Book Manager
+# =============================================================================
+
 # Mylar Deployment
 resource "kubernetes_deployment" "mylar" {
-  depends_on       = [kubernetes_namespace.mylar]
+  depends_on       = [kubernetes_namespace.media]
   wait_for_rollout = false
 
   metadata {
@@ -140,10 +149,7 @@ resource "kubernetes_deployment" "mylar" {
   }
 }
 
-# Note: Using hostPath instead of PVC since no StorageClass is available
-# Config will be stored at /opt/mylar-config on the worker node
-
-# LoadBalancer Service for Mylar
+# Mylar Service
 resource "kubernetes_service" "mylar" {
   depends_on = [kubernetes_deployment.mylar]
 
@@ -170,3 +176,4 @@ resource "kubernetes_service" "mylar" {
     }
   }
 }
+

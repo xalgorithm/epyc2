@@ -10,7 +10,7 @@ terraform {
   backend "local" {
     # macOS path
     path = "/Volumes/nfs-k8s/terraform-state/terraform.tfstate"
-    
+
     # Linux path (uncomment if on Linux):
     # path = "/mnt/nfs-k8s/terraform-state/terraform.tfstate"
   }

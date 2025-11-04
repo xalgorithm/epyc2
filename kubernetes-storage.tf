@@ -1,5 +1,9 @@
-# NFS Storage Configuration
-# This configures NFS as the default storage class for the Kubernetes cluster
+# Kubernetes Storage Configuration
+# This file configures NFS storage as the default storage class for the cluster
+
+# =============================================================================
+# NFS CSI Driver
+# =============================================================================
 
 # NFS CSI Driver Helm Chart
 resource "helm_release" "nfs_csi_driver" {
@@ -22,6 +26,10 @@ resource "helm_release" "nfs_csi_driver" {
     null_resource.cluster_api_ready
   ]
 }
+
+# =============================================================================
+# NFS Storage Class Configuration
+# =============================================================================
 
 # NFS Storage Class
 resource "kubernetes_storage_class" "nfs_storage_class" {
@@ -70,6 +78,10 @@ resource "null_resource" "remove_default_storage_class" {
     null_resource.cluster_api_ready
   ]
 }
+
+# =============================================================================
+# NFS Storage Validation
+# =============================================================================
 
 # Check NFS storage and existing service data
 resource "null_resource" "check_nfs_storage" {
@@ -268,6 +280,10 @@ resource "null_resource" "validate_service_data" {
   }
 }
 
+# =============================================================================
+# Test Resources
+# =============================================================================
+
 # Test PVC to verify NFS storage works
 resource "kubernetes_persistent_volume_claim" "nfs_test_pvc" {
   count = var.bootstrap_cluster ? 1 : 0
@@ -298,18 +314,3 @@ resource "kubernetes_persistent_volume_claim" "nfs_test_pvc" {
   }
 }
 
-# Output NFS storage information
-output "nfs_storage_info" {
-  description = "NFS storage configuration details"
-  value = var.bootstrap_cluster ? {
-    storage_class_name = kubernetes_storage_class.nfs_storage_class[0].metadata[0].name
-    nfs_server         = var.nfs_storage_server
-    nfs_path           = var.nfs_storage_path
-    is_default         = true
-  } : {
-    storage_class_name = "nfs-storage"
-    nfs_server         = var.nfs_storage_server
-    nfs_path           = var.nfs_storage_path
-    is_default         = true
-  }
-}

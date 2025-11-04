@@ -89,13 +89,13 @@ resource "kubernetes_config_map" "backup_scripts" {
     "fix-nfs-permissions.sh"         = file("${path.module}/scripts/maintenance/fix-nfs-permissions.sh")
     "restore-etcd.sh"                = file("${path.module}/scripts/backup/restore-etcd.sh")
 
-    "restore-grafana.sh"             = file("${path.module}/scripts/backup/restore-grafana.sh")
-    "restore-prometheus.sh"          = file("${path.module}/scripts/backup/restore-prometheus.sh")
-    "restore-loki.sh"                = file("${path.module}/scripts/backup/restore-loki.sh")
-    "restore-mimir.sh"               = file("${path.module}/scripts/backup/restore-mimir.sh")
+    "restore-grafana.sh"    = file("${path.module}/scripts/backup/restore-grafana.sh")
+    "restore-prometheus.sh" = file("${path.module}/scripts/backup/restore-prometheus.sh")
+    "restore-loki.sh"       = file("${path.module}/scripts/backup/restore-loki.sh")
+    "restore-mimir.sh"      = file("${path.module}/scripts/backup/restore-mimir.sh")
 
-    "backup-file-metrics.sh"         = file("${path.module}/scripts/backup/backup-file-metrics.sh")
-    "backup-cleanup.sh"              = file("${path.module}/scripts/backup/backup-cleanup.sh")
+    "backup-file-metrics.sh" = file("${path.module}/scripts/backup/backup-file-metrics.sh")
+    "backup-cleanup.sh"      = file("${path.module}/scripts/backup/backup-cleanup.sh")
   }
 }
 
