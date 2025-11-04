@@ -82,8 +82,47 @@ echo "🚀 Starting deployment..."
 echo "This may take 15-20 minutes..."
 echo ""
 
-# Apply Terraform configuration
-terraform apply -auto-approve tfplan
+# Stage 1: Create VMs and bootstrap cluster
+echo "📦 Stage 1: Creating VMs and bootstrapping Kubernetes cluster..."
+echo "This will create the Proxmox VMs and install Kubernetes..."
+echo ""
+terraform apply -auto-approve \
+  -target=proxmox_virtual_environment_file.cloud_init_user_data \
+  -target=proxmox_virtual_environment_vm.bumblebee \
+  -target=proxmox_virtual_environment_vm.prime \
+  -target=proxmox_virtual_environment_vm.wheeljack \
+  -target=null_resource.prepare_kubeconfig \
+  -target=null_resource.wait_for_vms \
+  -target=null_resource.control_plane_setup \
+  -target=null_resource.worker_setup \
+  -target=null_resource.copy_kubeconfig \
+  -target=null_resource.kubeconfig_ready \
+  -target=null_resource.cluster_api_ready \
+  -var="bootstrap_cluster=true"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Stage 1 failed - VM and cluster creation failed"
+    exit 1
+fi
+
+echo ""
+echo "✅ Stage 1 complete - Cluster is ready!"
+echo ""
+echo "⏳ Waiting 30 seconds for cluster to stabilize..."
+sleep 30
+echo ""
+
+# Stage 2: Deploy all Kubernetes resources
+echo "📦 Stage 2: Deploying Kubernetes resources..."
+echo "This will deploy MetalLB, storage, observability, and applications..."
+echo ""
+terraform apply -auto-approve -var="bootstrap_cluster=true"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Stage 2 failed - Kubernetes resources deployment failed"
+    echo "You can retry with: terraform apply -var=\"bootstrap_cluster=true\""
+    exit 1
+fi
 
 # Check deployment status
 echo ""
@@ -127,10 +166,10 @@ echo "- Prometheus: http://prometheus.home"
 echo "- Loki: http://loki.home"
 echo "- Mimir: http://mimir.home"
 echo "- Mylar: http://mylar.home"
-echo "- NetAlertX: http://netalertx.home"
+
 echo ""
 echo "💡 Add these entries to your /etc/hosts file:"
-echo "${INGRESS_IP:-192.168.1.40} grafana.home prometheus.home loki.home mimir.home mylar.home netalertx.home"
+echo "${INGRESS_IP:-192.168.1.40} grafana.home prometheus.home loki.home mimir.home mylar.home"
 echo ""
 echo "🔧 Useful Commands:"
 echo "- Check nodes: kubectl get nodes -o wide"

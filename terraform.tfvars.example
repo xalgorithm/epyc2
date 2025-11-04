@@ -1,171 +1,126 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+# =============================================================================
 # Proxmox Configuration
-# =====================
+# =============================================================================
 
-# Proxmox API endpoint
-proxmox_api_url = "https://your-proxmox-server:8006/api2/json"
+proxmox_api_url          = "https://192.168.0.7:8006/api2/json"
+proxmox_api_token_id     = "terraform@pam!terraform"
+proxmox_api_token_secret = "your-api-token-secret-here"
+# proxmox_password       = "alternative-to-api-token"  # Use token or password, not both
 
-# API Token (recommended) - Create in Proxmox UI: Datacenter > Permissions > API Tokens
-proxmox_api_token_id     = "your-username@pam!your-token-name"
-proxmox_api_token_secret = "your-token-secret"
+# =============================================================================
+# VM Network Configuration
+# =============================================================================
 
-# Alternative: Username/Password authentication (less secure)
-# proxmox_api_user     = "your-username@pam"
-# proxmox_api_password = "your-password"
+control_plane_ip = "192.168.0.32"
+worker_ips       = ["192.168.0.33", "192.168.0.34"]
+worker_names     = ["bumblebee", "wheeljack"]
+vm_gateway       = "192.168.0.1"
 
-# Proxmox node name where VMs will be created
-proxmox_node = "your-proxmox-node"
-
+# =============================================================================
 # SSH Configuration
-# =================
+# =============================================================================
 
-# Path to your SSH public key (will be added to VMs)
-ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+ssh_user             = "ubuntu"  # or your VM username
+ssh_private_key_path = "~/.ssh/id_rsa"
 
-# Path to your SSH private key (for Terraform provisioning)
-ssh_private_key_path = "~/.ssh/id_ed25519"
+# =============================================================================
+# Kubernetes Configuration
+# =============================================================================
 
-# Username for SSH access to VMs
-ssh_username = "ubuntu"
+k8s_version        = "1.28"
+pod_network_cidr   = "10.244.0.0/16"
+service_cidr       = "10.96.0.0/12"
+bootstrap_cluster  = true  # Set to false if cluster already exists
 
-# VM Configuration
-# ================
+# =============================================================================
+# MetalLB Load Balancer Configuration
+# =============================================================================
 
-# Network gateway for VMs
-vm_gateway = "192.168.1.1"
+metallb_pool_start = "192.168.0.35"
+metallb_pool_end   = "192.168.0.45"
+ingress_ip         = "192.168.0.35"  # Must be in MetalLB pool
+syslog_ip          = "192.168.0.36"  # For OPNsense logs (must be in MetalLB pool)
 
-# VM template name (Ubuntu Cloud Image recommended)
-vm_template_name = "ubuntu-22.04-cloud"
+# =============================================================================
+# NFS Storage Configuration
+# =============================================================================
 
-# Network configuration
-vm_network_bridge = "vmbr0"
-vm_network_vlan   = 100  # Set to null if not using VLANs
+nfs_storage_server         = "192.168.0.7"
+nfs_storage_path           = "/data/kubernetes"
+nfs_server_ip              = "192.168.0.7"
+nfs_backup_path            = "/data/kubernetes/backups"
+nfs_ssh_user               = "nfs-user"  # SSH user for NFS server (if different from ssh_user)
+nfs_ssh_private_key_path   = "~/.ssh/id_rsa"  # SSH key for NFS server (if different from ssh_private_key_path)
 
-# VM resource allocation
-control_plane_cores  = 4
-control_plane_memory = 8192
-control_plane_disk   = 50
+# =============================================================================
+# Backup Configuration
+# =============================================================================
 
-worker_cores  = 4
-worker_memory = 8192
-worker_disk   = 100
-
-# Storage configuration
-vm_storage_pool = "local-lvm"
-
-# Network Configuration
-# =====================
-
-# IP range for MetalLB load balancer
-metallb_ip_range = "192.168.1.200-192.168.1.220"
-
-# Cluster network settings
-cluster_cidr    = "10.42.0.0/16"
-service_cidr    = "10.43.0.0/16"
-cluster_dns_ip  = "10.43.0.10"
-
-# Domain for ingress (optional)
-ingress_domain = "k8s.local"
-
-# NFS Backup Configuration (Optional)
-# ===================================
-
-# NFS server for backup storage
-nfs_server_ip = "192.168.1.100"
-
-# NFS export path for backups
-nfs_backup_path = "/data/kubernetes/backups"
-
-# Backup retention (days)
 backup_retention_days = 30
 
-# Monitoring Configuration
-# ========================
+# =============================================================================
+# Docker Hub Configuration (for private images)
+# =============================================================================
 
-# Grafana admin credentials
-grafana_admin_user     = "admin"
-grafana_admin_password = "admin123"  # Change this!
+# dockerhub_username = "your-dockerhub-username"
+# dockerhub_password = "your-dockerhub-password"
+# dockerhub_email    = "your-email@example.com"
 
-# Prometheus retention
-prometheus_retention = "30d"
+# =============================================================================
+# DNS/Ingress Configuration
+# =============================================================================
 
-# Loki retention
-loki_retention = "720h"  # 30 days
+grafana_host    = "grafana.home"
+prometheus_host = "prometheus.home"
+loki_host       = "loki.home"
+mimir_host      = "mimir.home"
+mylar_host      = "mylar.home"
 
-# NetAlertX Configuration
-# =======================
+# =============================================================================
+# VM Resource Configuration (Optional - defaults provided)
+# =============================================================================
 
-# NetAlertX network scan range
-netalertx_scan_range = "192.168.1.0/24"
+# vm_memory              = 4096      # MB per worker node
+# vm_cores               = 2         # CPU cores per worker node
+# vm_disk_size           = "256"     # GB per VM
+# control_plane_memory   = 4096      # MB for control plane
+# control_plane_cores    = 2         # CPU cores for control plane
 
-# VM Network Configuration
-# ========================
+# =============================================================================
+# Notes:
+# =============================================================================
+# 
+# 1. Proxmox API Token:
+#    - Create in Proxmox UI: Datacenter → Permissions → API Tokens
+#    - Token needs PVEVMAdmin role
+#
+# 2. Network Configuration:
+#    - All IPs must be on the same subnet
+#    - MetalLB pool should not overlap with DHCP range
+#    - Reserve IPs in your router for static assignments
+#
+# 3. NFS Server:
+#    - Must be accessible from all Kubernetes nodes
+#    - Export path must exist and have proper permissions
+#    - Test with: showmount -e <nfs_server_ip>
+#
+# 4. SSH Keys:
+#    - Public key should be in VM cloud-init or authorized_keys
+#    - Private key path should be readable by Terraform
+#
+# 5. Service Access:
+#    - Grafana:     http://grafana.home      (admin/admin)
+#    - Prometheus:  http://prometheus.home
+#    - Loki:        http://loki.home
+#    - Mimir:       http://mimir.home
+#    - Mylar:       http://mylar.home
+#    - N8N:         http://automate.home     (admin/automate)
+#
+# 6. OPNsense Logging:
+#    - Configure OPNsense to send syslog to: 192.168.0.36:514
+#    - See docs/OPNSENSE_LOGGING.md for details
 
-# Control plane and worker node IPs
-control_plane_ip = "192.168.1.10"
-worker_ips       = ["192.168.1.11", "192.168.1.12"]
-
-# SSH Configuration
-ssh_user = "ubuntu"
-
-# MetalLB IP Pool
-metallb_pool_start = "192.168.1.200"
-metallb_pool_end   = "192.168.1.220"
-
-# Ingress IP (must be within MetalLB pool)
-ingress_ip = "192.168.1.200"
-
-# NetAlertX timezone
-netalertx_timezone = "America/New_York"
-
-# Application Configuration
-# =========================
-
-# Enable/disable components
-enable_monitoring = true
-enable_netalertx  = true
-enable_backup     = true
-
-# Resource limits
-monitoring_cpu_limit    = "2000m"
-monitoring_memory_limit = "4Gi"
-
-netalertx_cpu_limit    = "500m"
-netalertx_memory_limit = "1Gi"
-
-# Advanced Configuration
-# ======================
-
-# Kubernetes version (K3s)
-k3s_version = "v1.28.3+k3s2"
-
-# Container runtime
-container_runtime = "containerd"
-
-# Enable cluster autoscaling
-enable_autoscaling = false
-
-# Enable network policies
-enable_network_policies = true
-
-# Enable pod security policies
-enable_pod_security = true
-
-# Logging level
-log_level = "info"
-
-# Example Values (uncomment and modify as needed)
-# ===============================================
-
-# proxmox_api_url          = "https://192.168.1.10:8006/api2/json"
-# proxmox_api_token_id     = "terraform@pam!terraform-token"
-# proxmox_api_token_secret = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-# proxmox_node             = "pve"
-# ssh_public_key_path      = "~/.ssh/id_ed25519.pub"
-# ssh_private_key_path     = "~/.ssh/id_ed25519"
-# vm_template_name         = "ubuntu-22.04-cloud"
-# vm_network_bridge        = "vmbr0"
-# vm_network_vlan          = null
-# metallb_ip_range         = "192.168.1.200-192.168.1.220"
-# nfs_server_ip            = "192.168.1.100"
-# nfs_backup_path          = "/data/kubernetes/backups"
-# ingress_domain           = "homelab.local"

@@ -31,10 +31,10 @@
 
 - ✅ Removed hardcoded IPs from `main.tf` variable defaults
 - ✅ Added `vm_gateway` variable for network gateway
-- ✅ Added `netalertx_scan_range` variable for network scanning
+
 - ✅ Updated `mylar.tf` to use NFS variables instead of hardcoded IP
 - ✅ Updated `proxmox-vms.tf` to use gateway variable
-- ✅ Updated `netalertx.tf` to use scan range variable
+
 
 #### **Documentation Files**
 
@@ -88,8 +88,7 @@ ssh_private_key_path   = "path-to-your-private-key"
 nfs_server_ip          = "your-nfs-server-ip"
 nfs_storage_server     = "your-nfs-server-ip"
 
-# NetAlertX Configuration
-netalertx_scan_range   = "your-network-range"
+
 
 # Proxmox Configuration
 proxmox_api_url        = "your-proxmox-api-url"

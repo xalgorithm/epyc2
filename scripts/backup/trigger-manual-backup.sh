@@ -29,7 +29,7 @@ show_usage() {
     echo "  etcd        - Backup only ETCD"
     echo "  resources   - Backup only Kubernetes resources"
     echo "  apps        - Backup only application data"
-    echo "  netalertx   - Backup only NetAlertX"
+
     echo "  grafana     - Backup only Grafana"
     echo "  prometheus  - Backup only Prometheus"
     echo "  loki        - Backup only Loki"

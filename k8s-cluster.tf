@@ -1,13 +1,40 @@
+# Ensure kubeconfig directory exists and create placeholder if needed
+resource "null_resource" "prepare_kubeconfig" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Create .kube directory if it doesn't exist
+      mkdir -p ~/.kube
+      
+      # If kubeconfig doesn't exist, create a minimal placeholder to prevent provider errors
+      if [ ! -f ~/.kube/config ]; then
+        echo "Creating placeholder kubeconfig (will be replaced with real config after cluster creation)"
+        cat > ~/.kube/config <<EOF
+      apiVersion: v1
+      kind: Config
+      clusters: []
+      contexts: []
+      current-context: ""
+      users: []
+      EOF
+        chmod 600 ~/.kube/config
+      else
+        echo "Kubeconfig already exists"
+      fi
+    EOT
+  }
+}
+
 # Wait for VMs to be fully ready
 resource "null_resource" "wait_for_vms" {
   count = var.bootstrap_cluster ? 1 : 0
-
+  
   depends_on = [
     proxmox_virtual_environment_vm.bumblebee,
     proxmox_virtual_environment_vm.prime,
     proxmox_virtual_environment_vm.wheeljack
   ]
 
+  # VMs are managed externally, just wait for SSH connectivity
   provisioner "local-exec" {
     command = <<-EOT
       echo "Waiting for VMs to be accessible..."
@@ -66,12 +93,12 @@ resource "null_resource" "control_plane_setup" {
 
   # Copy setup scripts
   provisioner "file" {
-    source      = "scripts/k8s-common-setup.sh"
+    source      = "scripts/deployment/k8s-common-setup.sh"
     destination = "/tmp/k8s-common-setup.sh"
   }
 
   provisioner "file" {
-    source      = "scripts/k8s-control-plane-setup.sh"
+    source      = "scripts/deployment/k8s-control-plane-setup.sh"
     destination = "/tmp/k8s-control-plane-setup.sh"
   }
 
@@ -85,7 +112,7 @@ resource "null_resource" "control_plane_setup" {
       "timeout 300 bash -c 'while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do echo \"Waiting for dpkg lock...\"; sleep 5; done'",
       "echo 'System ready, starting Kubernetes setup...'",
       "sudo chmod +x /tmp/k8s-common-setup.sh",
-      "sudo K8S_VERSION=${var.k8s_version} /tmp/k8s-common-setup.sh"
+      "sudo env K8S_VERSION=${var.k8s_version} /tmp/k8s-common-setup.sh"
     ]
   }
 
@@ -93,7 +120,7 @@ resource "null_resource" "control_plane_setup" {
   provisioner "remote-exec" {
     inline = [
       "sudo chmod +x /tmp/k8s-control-plane-setup.sh",
-      "sudo POD_NETWORK_CIDR=${var.pod_network_cidr} SERVICE_CIDR=${var.service_cidr} CONTROL_PLANE_IP=${var.control_plane_ip} SSH_USER=${var.ssh_user} /tmp/k8s-control-plane-setup.sh"
+      "sudo env POD_NETWORK_CIDR=${var.pod_network_cidr} SERVICE_CIDR=${var.service_cidr} CONTROL_PLANE_IP=${var.control_plane_ip} SSH_USER=${var.ssh_user} /tmp/k8s-control-plane-setup.sh"
     ]
   }
 
@@ -149,12 +176,12 @@ resource "null_resource" "worker_setup" {
 
   # Copy setup scripts
   provisioner "file" {
-    source      = "scripts/k8s-common-setup.sh"
+    source      = "scripts/deployment/k8s-common-setup.sh"
     destination = "/tmp/k8s-common-setup.sh"
   }
 
   provisioner "file" {
-    source      = "scripts/k8s-worker-setup.sh"
+    source      = "scripts/deployment/k8s-worker-setup.sh"
     destination = "/tmp/k8s-worker-setup.sh"
   }
 
@@ -168,7 +195,7 @@ resource "null_resource" "worker_setup" {
       "timeout 300 bash -c 'while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do echo \"Waiting for dpkg lock...\"; sleep 5; done'",
       "echo 'System ready, starting Kubernetes setup...'",
       "sudo chmod +x /tmp/k8s-common-setup.sh",
-      "sudo K8S_VERSION=${var.k8s_version} /tmp/k8s-common-setup.sh"
+      "sudo env K8S_VERSION=${var.k8s_version} /tmp/k8s-common-setup.sh"
     ]
   }
 
@@ -176,7 +203,7 @@ resource "null_resource" "worker_setup" {
   provisioner "remote-exec" {
     inline = [
       "sudo chmod +x /tmp/k8s-worker-setup.sh",
-      "sudo CONTROL_PLANE_IP=${var.control_plane_ip} SSH_USER=${var.ssh_user} SSH_PRIVATE_KEY_PATH=/home/${var.ssh_user}/.ssh/maint-rsa /tmp/k8s-worker-setup.sh"
+      "sudo env CONTROL_PLANE_IP=${var.control_plane_ip} SSH_USER=${var.ssh_user} SSH_PRIVATE_KEY_PATH=/home/${var.ssh_user}/.ssh/maint-rsa /tmp/k8s-worker-setup.sh"
     ]
   }
 
@@ -201,23 +228,20 @@ resource "null_resource" "copy_kubeconfig" {
   }
 }
 
-# Marker resource to gate Kubernetes resources when bootstrapping
+# Marker resource to gate Kubernetes resources
 resource "null_resource" "kubeconfig_ready" {
   depends_on = [
-    proxmox_virtual_environment_vm.bumblebee,
-    proxmox_virtual_environment_vm.prime,
-    proxmox_virtual_environment_vm.wheeljack,
-    null_resource.control_plane_setup,
-    null_resource.copy_kubeconfig
+    null_resource.prepare_kubeconfig
   ]
 
+  # Simple check - just verify kubeconfig exists or cluster is accessible
   provisioner "local-exec" {
-    command = var.bootstrap_cluster ? "i=0; while [ ! -f ~/.kube/config ] && [ $i -lt 300 ]; do sleep 2; i=$((i+2)); done; [ -f ~/.kube/config ] || exit 1" : "echo 'Using existing kubeconfig'"
+    command = var.bootstrap_cluster ? "echo 'Bootstrapping mode - waiting for kubeconfig from cluster setup'; sleep 10" : "echo 'External mode - checking cluster access'; kubectl cluster-info || (echo 'Kubeconfig not accessible' && exit 1)"
   }
 
   triggers = {
-    mode      = var.bootstrap_cluster ? "bootstrap" : "external"
-    timestamp = timestamp()
+    mode               = var.bootstrap_cluster ? "bootstrap" : "external"
+    copy_kubeconfig_id = var.bootstrap_cluster ? join(",", null_resource.copy_kubeconfig[*].id) : "none"
   }
 }
 

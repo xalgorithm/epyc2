@@ -2,52 +2,87 @@
 
 This document outlines the proper deployment order for the full Kubernetes cluster stack.
 
+## 🎉 Recent Improvements
+
+The bootstrap process has been significantly improved to support **single-command deployment**. Key improvements include:
+
+- ✅ **Early guest agent installation** via cloud-init (fixes Proxmox IP detection)
+- ✅ **Placeholder kubeconfig creation** (prevents provider initialization errors)
+- ✅ **Improved dependency chain** (ensures proper resource ordering)
+
+**For detailed information about these improvements, see [BOOTSTRAP-IMPROVEMENTS.md](BOOTSTRAP-IMPROVEMENTS.md)**
+
+## Quick Start
+
+For a fresh deployment:
+
+```bash
+terraform init
+terraform apply -var="bootstrap_cluster=true"
+```
+
+That's it! The deployment now works end-to-end in a single command.
+
+## Detailed Deployment Phases
+
+The following phases happen automatically during `terraform apply`:
+
+## Phase 0: Pre-Bootstrap
+
+0. **Kubeconfig Preparation**
+   - `null_resource.prepare_kubeconfig` - Creates placeholder kubeconfig if needed
+   - Prevents Kubernetes provider from failing during initial plan
+
 ## Phase 1: Infrastructure (VMs)
 
-1. **Proxmox VMs Creation**
+1. **Cloud-Init Configuration**
+   - `proxmox_virtual_environment_file.cloud_init_user_data` - Uploads cloud-init snippet
+   - Installs qemu-guest-agent and nfs-common during first boot
+
+2. **Proxmox VMs Creation**
    - `proxmox_virtual_environment_vm.bumblebee` (Control Plane)
    - `proxmox_virtual_environment_vm.prime` (Worker 1)
    - `proxmox_virtual_environment_vm.wheeljack` (Worker 2)
 
 ## Phase 2: VM Readiness
 
-2. **VM Accessibility Check**
+3. **VM Accessibility Check**
    - `null_resource.wait_for_vms` - Waits for SSH connectivity to all VMs
 
 ## Phase 3: Kubernetes Cluster Bootstrap
 
-3. **Control Plane Setup**
+4. **Control Plane Setup**
    - `null_resource.control_plane_setup` - Installs and configures Kubernetes control plane
    - Runs kubeadm init
    - Installs Flannel CNI
    - Configures cluster networking
 
-4. **Worker Nodes Setup**
+5. **Worker Nodes Setup**
    - `null_resource.worker_setup` - Joins worker nodes to the cluster
    - Runs kubeadm join on each worker
 
-5. **Kubeconfig Management**
-   - `null_resource.copy_kubeconfig` - Copies kubeconfig to local machine
+6. **Kubeconfig Management**
+   - `null_resource.copy_kubeconfig` - Copies kubeconfig to local machine (replaces placeholder)
    - `null_resource.kubeconfig_ready` - Validates kubeconfig availability
 
 ## Phase 4: Cluster API Readiness
 
-6. **API Server Validation**
+7. **API Server Validation**
    - `null_resource.cluster_api_ready` - Ensures Kubernetes API is accessible
 
 ## Phase 5: Core Networking (Load Balancer)
 
-7. **MetalLB Installation**
-   - `kubernetes_namespace.metallb_system` - Creates MetalLB namespace
+8. **MetalLB Installation**
+   - `null_resource.metallb_namespace` - Creates MetalLB namespace via kubectl
    - `helm_release.metallb` - Installs MetalLB via Helm
    - `null_resource.metallb_ready` - Waits for MetalLB controller
-   - `kubernetes_manifest.metallb_ipaddresspool` - Configures IP pool
-   - `kubernetes_manifest.metallb_l2advertisement` - Configures L2 advertisements
+   - `null_resource.metallb_ipaddresspool` - Configures IP pool
+   - `null_resource.metallb_l2advertisement` - Configures L2 advertisements
    - `null_resource.metallb_operational` - Final MetalLB readiness check
 
 ## Phase 6: Storage
 
-8. **NFS Storage Configuration**
+9. **NFS Storage Configuration**
    - `null_resource.create_nfs_directory` - Creates NFS directories
    - `null_resource.remove_default_storage_class` - Removes default storage class
    - `kubernetes_storage_class.nfs_storage_class` - Creates NFS storage class

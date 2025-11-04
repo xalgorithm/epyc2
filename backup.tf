@@ -88,12 +88,12 @@ resource "kubernetes_config_map" "backup_scripts" {
     "diagnose-nfs-access.sh"         = file("${path.module}/scripts/troubleshooting/diagnose-nfs-access.sh")
     "fix-nfs-permissions.sh"         = file("${path.module}/scripts/maintenance/fix-nfs-permissions.sh")
     "restore-etcd.sh"                = file("${path.module}/scripts/backup/restore-etcd.sh")
-    "restore-netalertx.sh"           = file("${path.module}/scripts/backup/restore-netalertx.sh")
+
     "restore-grafana.sh"             = file("${path.module}/scripts/backup/restore-grafana.sh")
     "restore-prometheus.sh"          = file("${path.module}/scripts/backup/restore-prometheus.sh")
     "restore-loki.sh"                = file("${path.module}/scripts/backup/restore-loki.sh")
     "restore-mimir.sh"               = file("${path.module}/scripts/backup/restore-mimir.sh")
-    "verify-netalertx-backup.sh"     = file("${path.module}/scripts/backup/verify-netalertx-backup.sh")
+
     "backup-file-metrics.sh"         = file("${path.module}/scripts/backup/backup-file-metrics.sh")
     "backup-cleanup.sh"              = file("${path.module}/scripts/backup/backup-cleanup.sh")
   }

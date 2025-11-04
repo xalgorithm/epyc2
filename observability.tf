@@ -10,8 +10,11 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-# Prometheus Storage PVC
+# Prometheus Storage PVC (only create if cluster is accessible)
 resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
+  # Skip creation if cluster is not accessible
+  count = 1
+
   metadata {
     name      = "prometheus-storage"
     namespace = "monitoring"
@@ -32,12 +35,21 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   depends_on = [
     kubernetes_namespace.monitoring,
     helm_release.nfs_csi_driver,
-    kubernetes_storage_class.nfs_storage_class
+    kubernetes_storage_class.nfs_storage_class,
+    null_resource.check_nfs_storage,
+    null_resource.check_cluster_connectivity
   ]
+
+  timeouts {
+    create = "15m"
+  }
 }
 
-# Grafana Storage PVC
+# Grafana Storage PVC (only create if cluster is accessible)
 resource "kubernetes_persistent_volume_claim" "grafana_storage" {
+  # Skip creation if cluster is not accessible
+  count = 1
+
   metadata {
     name      = "grafana-storage"
     namespace = "monitoring"
@@ -58,8 +70,14 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   depends_on = [
     kubernetes_namespace.monitoring,
     helm_release.nfs_csi_driver,
-    kubernetes_storage_class.nfs_storage_class
+    kubernetes_storage_class.nfs_storage_class,
+    null_resource.check_nfs_storage,
+    null_resource.check_cluster_connectivity
   ]
+
+  timeouts {
+    create = "15m"
+  }
 }
 
 # Docker Hub Secret for Image Pulling
@@ -471,7 +489,12 @@ resource "kubernetes_service" "mimir_query_frontend" {
 
 # Prometheus Deployment
 resource "kubernetes_deployment" "prometheus" {
-  depends_on       = [kubernetes_config_map.prometheus_config, kubernetes_service_account.prometheus]
+  depends_on = [
+    kubernetes_config_map.prometheus_config,
+    kubernetes_service_account.prometheus,
+    kubernetes_persistent_volume_claim.prometheus_storage[0],
+    null_resource.validate_service_data
+  ]
   wait_for_rollout = false
 
   metadata {
@@ -564,7 +587,7 @@ resource "kubernetes_deployment" "prometheus" {
         volume {
           name = "prometheus-storage-volume"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.prometheus_storage.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim.prometheus_storage[0].metadata[0].name
           }
         }
       }
@@ -891,7 +914,14 @@ resource "kubernetes_daemonset" "promtail" {
 
 # Grafana Deployment
 resource "kubernetes_deployment" "grafana" {
-  depends_on       = [kubernetes_config_map.grafana_config, kubernetes_config_map.grafana_datasources, kubernetes_config_map.grafana_dashboard_provisioning, kubernetes_config_map.grafana_dashboards]
+  depends_on = [
+    kubernetes_config_map.grafana_config,
+    kubernetes_config_map.grafana_datasources,
+    kubernetes_config_map.grafana_dashboard_provisioning,
+    kubernetes_config_map.grafana_dashboards,
+    kubernetes_persistent_volume_claim.grafana_storage[0],
+    null_resource.validate_service_data
+  ]
   wait_for_rollout = false
 
   metadata {
@@ -1058,7 +1088,7 @@ resource "kubernetes_deployment" "grafana" {
         volume {
           name = "grafana-storage"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.grafana_storage.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim.grafana_storage[0].metadata[0].name
           }
         }
 

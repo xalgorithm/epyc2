@@ -34,7 +34,7 @@ echo "🏷️  Backing up namespaces..."
 kubectl get namespaces -o yaml > "${BACKUP_PATH}/resources/namespaces.yaml"
 
 # Backup critical resources by namespace
-NAMESPACES="monitoring media backup metallb-system kube-system netalertx"
+NAMESPACES="monitoring media backup metallb-system kube-system"
 
 for ns in $NAMESPACES; do
     echo "📂 Backing up namespace: $ns"
@@ -84,60 +84,7 @@ kubectl get nodes -o yaml > "${BACKUP_PATH}/resources/cluster/nodes.yaml" 2>/dev
 # Backup application data (if accessible)
 echo "💾 Backing up application data..."
 
-# Backup NetAlertX data
-echo "🔍 Backing up NetAlertX data..."
-mkdir -p "${BACKUP_PATH}/persistent-data/netalertx"
 
-# Check if NetAlertX namespace exists
-if kubectl get namespace netalertx >/dev/null 2>&1; then
-    # Get NetAlertX pod name
-    NETALERTX_POD=$(kubectl get pods -n netalertx -l app=netalertx -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-    
-    if [ -n "$NETALERTX_POD" ] && [ "$NETALERTX_POD" != "null" ]; then
-        echo "📱 Found NetAlertX pod: $NETALERTX_POD"
-        
-        # Backup NetAlertX database
-        echo "🗄️  Backing up NetAlertX database..."
-        kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /db/app.db ]; then cat /db/app.db; else echo "Database not found"; fi' > "${BACKUP_PATH}/persistent-data/netalertx/app.db" 2>/dev/null || echo "⚠️  Could not backup NetAlertX database"
-        
-        # Backup NetAlertX configuration
-        echo "⚙️  Backing up NetAlertX configuration..."
-        kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /config/app.conf ]; then cat /config/app.conf; else echo "Config not found"; fi' > "${BACKUP_PATH}/persistent-data/netalertx/app.conf" 2>/dev/null || echo "⚠️  Could not backup NetAlertX config"
-        
-        # Backup NetAlertX logs
-        echo "📝 Backing up NetAlertX logs..."
-        kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -d /app/front/log ]; then tar -czf - /app/front/log 2>/dev/null; else echo "Logs not found"; fi' > "${BACKUP_PATH}/persistent-data/netalertx/logs.tar.gz" 2>/dev/null || echo "⚠️  Could not backup NetAlertX logs"
-        
-        # Get database info
-        DB_SIZE=$(kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /db/app.db ]; then ls -la /db/app.db | awk "{print \$5}"; else echo "0"; fi' 2>/dev/null || echo "0")
-        echo "📊 NetAlertX database size: ${DB_SIZE} bytes"
-        
-        # Create NetAlertX backup info
-        cat > "${BACKUP_PATH}/persistent-data/netalertx/backup-info.txt" << EOF
-NetAlertX Backup Information
-===========================
-Backup Date: $(date)
-Pod Name: ${NETALERTX_POD}
-Database Size: ${DB_SIZE} bytes
-Database Path: /db/app.db
-Config Path: /config/app.conf
-Logs Path: /app/front/log
-
-Files Backed Up:
-- app.db (NetAlertX database)
-- app.conf (NetAlertX configuration)
-- logs.tar.gz (NetAlertX logs archive)
-EOF
-        
-        echo "✅ NetAlertX data backup completed"
-    else
-        echo "⚠️  NetAlertX pod not found or not running"
-        echo "📝 Creating placeholder for NetAlertX backup..."
-        echo "NetAlertX pod not available during backup" > "${BACKUP_PATH}/persistent-data/netalertx/backup-unavailable.txt"
-    fi
-else
-    echo "⚠️  NetAlertX namespace not found"
-fi
 
 # Backup Grafana data
 echo "📊 Backing up Grafana data..."
@@ -344,9 +291,7 @@ echo "🎯 Backing up Mimir data..."
 # Mimir data is backed up automatically in the main backup process
 # This includes: metrics data and indexes
 
-echo "🔍 Backing up NetAlertX persistent volumes..."
-# NetAlertX data is backed up automatically in the main backup process
-# This includes: app.db, app.conf, and logs
+
 
 echo "✅ All application data is backed up automatically!"
 echo "📁 Check the persistent-data directory for individual service backups"
@@ -380,11 +325,7 @@ $(kubectl get svc --all-namespaces | grep LoadBalancer 2>/dev/null || echo "No L
 Pod Status Summary:
 $(kubectl get pods --all-namespaces --field-selector=status.phase!=Running 2>/dev/null || echo "All pods running or unable to check")
 
-NetAlertX Status:
-$(kubectl get pods -n netalertx -l app=netalertx 2>/dev/null || echo "NetAlertX not deployed")
 
-NetAlertX Persistent Volumes:
-$(kubectl get pvc -n netalertx 2>/dev/null || echo "No NetAlertX PVCs found")
 
 Observability Stack Status:
 $(kubectl get pods -n monitoring 2>/dev/null || echo "Monitoring namespace not found")
@@ -415,9 +356,9 @@ Backup Size: $(du -sh "${BACKUP_PATH}" | cut -f1)
 Namespaces Backed Up: ${NAMESPACES}
 Resource Types: deployments, services, configmaps, secrets, pvc, daemonsets, statefulsets, cronjobs
 Cluster Resources: clusterroles, clusterrolebindings, persistentvolumes, storageclasses, nodes
-Application Data: NetAlertX, Grafana, Prometheus, Loki, Mimir
+Application Data: Grafana, Prometheus, Loki, Mimir
 Persistent Data: 
-  - NetAlertX: app.db, app.conf, logs archive
+
   - Grafana: grafana.db, data directory archive
   - Prometheus: TSDB snapshots, data directory archive
   - Loki: data directory archive
@@ -436,7 +377,7 @@ BACKUP_DURATION=$((BACKUP_END_TIME - BACKUP_START_TIME))
 
 # Calculate sizes and counts
 BACKUP_SIZE=$(du -sb "${BACKUP_PATH}" | cut -f1)
-NETALERTX_DB_SIZE=$(if [ -f "${BACKUP_PATH}/persistent-data/netalertx/app.db" ]; then ls -la "${BACKUP_PATH}/persistent-data/netalertx/app.db" | awk '{print $5}'; else echo "0"; fi)
+
 GRAFANA_DB_SIZE=$(if [ -f "${BACKUP_PATH}/persistent-data/grafana/grafana.db" ]; then ls -la "${BACKUP_PATH}/persistent-data/grafana/grafana.db" | awk '{print $5}'; else echo "0"; fi)
 PROMETHEUS_SIZE=$(if [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-snapshot.tar.gz" ]; then ls -la "${BACKUP_PATH}/persistent-data/prometheus/prometheus-snapshot.tar.gz" | awk '{print $5}'; elif [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-data.tar.gz" ]; then ls -la "${BACKUP_PATH}/persistent-data/prometheus/prometheus-data.tar.gz" | awk '{print $5}'; else echo "0"; fi)
 LOKI_SIZE=$(if [ -f "${BACKUP_PATH}/persistent-data/loki/loki-data.tar.gz" ]; then ls -la "${BACKUP_PATH}/persistent-data/loki/loki-data.tar.gz" | awk '{print $5}'; else echo "0"; fi)
@@ -448,7 +389,7 @@ TOTAL_BACKUP_COUNT=$(ls -1 "${BACKUP_DIR}" | wc -l)
 TOTAL_BACKUP_FILES=$(find "${BACKUP_DIR}" -type f | wc -l)
 
 # Backup success status
-NETALERTX_BACKUP_STATUS=$(if [ -f "${BACKUP_PATH}/persistent-data/netalertx/app.db" ]; then echo "1"; else echo "0"; fi)
+
 GRAFANA_BACKUP_STATUS=$(if [ -f "${BACKUP_PATH}/persistent-data/grafana/grafana.db" ]; then echo "1"; else echo "0"; fi)
 PROMETHEUS_BACKUP_STATUS=$(if [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-snapshot.tar.gz" ] || [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-data.tar.gz" ]; then echo "1"; else echo "0"; fi)
 LOKI_BACKUP_STATUS=$(if [ -f "${BACKUP_PATH}/persistent-data/loki/loki-data.tar.gz" ]; then echo "1"; else echo "0"; fi)
@@ -467,14 +408,7 @@ k8s_data_backup_size_bytes ${BACKUP_SIZE}
 # TYPE k8s_data_backup_resources_count gauge
 k8s_data_backup_resources_count ${RESOURCE_COUNT}
 
-# NetAlertX backup metrics
-# HELP netalertx_backup_database_size_bytes Size of NetAlertX database backup in bytes
-# TYPE netalertx_backup_database_size_bytes gauge
-netalertx_backup_database_size_bytes ${NETALERTX_DB_SIZE}
 
-# HELP netalertx_backup_success NetAlertX backup success status (1=success, 0=failed)
-# TYPE netalertx_backup_success gauge
-netalertx_backup_success ${NETALERTX_BACKUP_STATUS}
 
 # Grafana backup metrics
 # HELP grafana_backup_database_size_bytes Size of Grafana database backup in bytes
@@ -534,7 +468,7 @@ echo "📦 Resource files: $(find "${BACKUP_PATH}/resources" -name "*.yaml" | wc
 echo "📁 Total backups: ${TOTAL_BACKUP_COUNT} directories, ${TOTAL_BACKUP_FILES} files"
 echo ""
 echo "📋 Application Backup Summary:"
-echo "🔍 NetAlertX: $(if [ -f "${BACKUP_PATH}/persistent-data/netalertx/app.db" ]; then echo "✅ Success ($(ls -lh "${BACKUP_PATH}/persistent-data/netalertx/app.db" | awk '{print $5}'))"; else echo "❌ Failed or unavailable"; fi)"
+
 echo "📊 Grafana: $(if [ -f "${BACKUP_PATH}/persistent-data/grafana/grafana.db" ]; then echo "✅ Success ($(ls -lh "${BACKUP_PATH}/persistent-data/grafana/grafana.db" | awk '{print $5}'))"; else echo "❌ Failed or unavailable"; fi)"
 echo "📈 Prometheus: $(if [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-snapshot.tar.gz" ]; then echo "✅ Snapshot ($(ls -lh "${BACKUP_PATH}/persistent-data/prometheus/prometheus-snapshot.tar.gz" | awk '{print $5}'))"; elif [ -f "${BACKUP_PATH}/persistent-data/prometheus/prometheus-data.tar.gz" ]; then echo "✅ Data ($(ls -lh "${BACKUP_PATH}/persistent-data/prometheus/prometheus-data.tar.gz" | awk '{print $5}'))"; else echo "❌ Failed or unavailable"; fi)"
 echo "📝 Loki: $(if [ -f "${BACKUP_PATH}/persistent-data/loki/loki-data.tar.gz" ]; then echo "✅ Success ($(ls -lh "${BACKUP_PATH}/persistent-data/loki/loki-data.tar.gz" | awk '{print $5}'))"; else echo "❌ Failed or unavailable"; fi)"

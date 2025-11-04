@@ -81,7 +81,7 @@ setup_backup_directory() {
         exit 1
     fi
     
-    if ! mkdir -p "${BACKUP_DIR}/persistent-data"/{netalertx,grafana,prometheus,loki,mimir} 2>/dev/null; then
+    if ! mkdir -p "${BACKUP_DIR}/persistent-data"/{grafana,prometheus,loki,mimir} 2>/dev/null; then
         log_error "Failed to create application data directories"
         exit 1
     fi
@@ -143,7 +143,7 @@ backup_kubernetes_resources() {
     kubectl get namespaces -o yaml > "${BACKUP_DIR}/resources/namespaces.yaml"
     
     # Backup critical resources by namespace
-    NAMESPACES="monitoring media backup metallb-system kube-system netalertx default"
+    NAMESPACES="monitoring media backup metallb-system kube-system default"
     
     for ns in $NAMESPACES; do
         if kubectl get namespace "$ns" >/dev/null 2>&1; then
@@ -191,47 +191,7 @@ backup_kubernetes_resources() {
     log_success "Kubernetes resources backup completed"
 }
 
-# Backup NetAlertX data
-backup_netalertx() {
-    log_info "Backing up NetAlertX data..."
-    
-    if kubectl get namespace netalertx >/dev/null 2>&1; then
-        NETALERTX_POD=$(kubectl get pods -n netalertx -l app=netalertx -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-        
-        if [ -n "$NETALERTX_POD" ] && [ "$NETALERTX_POD" != "null" ]; then
-            log_info "Found NetAlertX pod: $NETALERTX_POD"
-            
-            # Backup NetAlertX database
-            kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /db/app.db ]; then cat /db/app.db; else echo "Database not found"; fi' > "${BACKUP_DIR}/persistent-data/netalertx/app.db" 2>/dev/null || log_warning "Could not backup NetAlertX database"
-            
-            # Backup NetAlertX configuration
-            kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /config/app.conf ]; then cat /config/app.conf; else echo "Config not found"; fi' > "${BACKUP_DIR}/persistent-data/netalertx/app.conf" 2>/dev/null || log_warning "Could not backup NetAlertX config"
-            
-            # Backup NetAlertX logs
-            kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -d /app/front/log ]; then tar -czf - /app/front/log 2>/dev/null; else echo "Logs not found"; fi' > "${BACKUP_DIR}/persistent-data/netalertx/logs.tar.gz" 2>/dev/null || log_warning "Could not backup NetAlertX logs"
-            
-            # Create backup info
-            DB_SIZE=$(kubectl exec -n netalertx "$NETALERTX_POD" -- sh -c 'if [ -f /db/app.db ]; then ls -la /db/app.db | awk "{print \$5}"; else echo "0"; fi' 2>/dev/null || echo "0")
-            
-            cat > "${BACKUP_DIR}/persistent-data/netalertx/backup-info.txt" << EOF
-NetAlertX Backup Information
-===========================
-Backup Date: $(date)
-Pod Name: ${NETALERTX_POD}
-Database Size: ${DB_SIZE} bytes
-Database Path: /db/app.db
-Config Path: /config/app.conf
-Logs Path: /app/front/log
-EOF
-            
-            log_success "NetAlertX data backup completed"
-        else
-            log_warning "NetAlertX pod not found or not running"
-        fi
-    else
-        log_warning "NetAlertX namespace not found"
-    fi
-}
+
 
 # Backup Grafana data
 backup_grafana() {
@@ -417,7 +377,7 @@ Application Data Files: $(find "${BACKUP_DIR}/persistent-data" -type f 2>/dev/nu
 
 Application Backup Status:
 =========================
-NetAlertX: $(if [ -f "${BACKUP_DIR}/persistent-data/netalertx/app.db" ]; then echo "✅ Success"; else echo "❌ Failed"; fi)
+
 Grafana: $(if [ -f "${BACKUP_DIR}/persistent-data/grafana/grafana.db" ]; then echo "✅ Success"; else echo "❌ Failed"; fi)
 Prometheus: $(if [ -f "${BACKUP_DIR}/persistent-data/prometheus/prometheus-snapshot.tar.gz" ] || [ -f "${BACKUP_DIR}/persistent-data/prometheus/prometheus-data.tar.gz" ]; then echo "✅ Success"; else echo "❌ Failed"; fi)
 Loki: $(if [ -f "${BACKUP_DIR}/persistent-data/loki/loki-data.tar.gz" ]; then echo "✅ Success"; else echo "❌ Failed"; fi)
@@ -444,7 +404,7 @@ show_usage() {
     echo "  etcd        - Backup only ETCD"
     echo "  resources   - Backup only Kubernetes resources"
     echo "  apps        - Backup only application data"
-    echo "  netalertx   - Backup only NetAlertX"
+
     echo "  grafana     - Backup only Grafana"
     echo "  prometheus  - Backup only Prometheus"
     echo "  loki        - Backup only Loki"
@@ -474,7 +434,6 @@ main() {
         "all")
             backup_etcd
             backup_kubernetes_resources
-            backup_netalertx
             backup_grafana
             backup_prometheus
             backup_loki
@@ -487,14 +446,10 @@ main() {
             backup_kubernetes_resources
             ;;
         "apps")
-            backup_netalertx
             backup_grafana
             backup_prometheus
             backup_loki
             backup_mimir
-            ;;
-        "netalertx")
-            backup_netalertx
             ;;
         "grafana")
             backup_grafana

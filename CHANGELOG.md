@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - K3s Kubernetes cluster deployment with control plane and worker nodes
 - MetalLB load balancer for bare-metal environments
 - Comprehensive monitoring stack (Prometheus, Grafana, Loki, Mimir)
-- NetAlertX network monitoring and device discovery
+
 - Automated backup system with NFS storage integration
 - Traefik ingress controller with SSL termination
 - Comprehensive documentation and troubleshooting guides
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kubernetes Cluster**: Multi-node K3s cluster with HA capabilities
 - **Load Balancing**: MetalLB Layer 2 configuration
 - **Monitoring**: Full observability stack with custom dashboards
-- **Network Monitoring**: NetAlertX for network device discovery
+
 - **Backup System**: Scheduled and manual backup capabilities
 - **Ingress**: HTTP/HTTPS routing with automatic SSL certificates
 
@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Backup and Recovery
 - Automated ETCD backups
-- Application data backup (Grafana, Prometheus, NetAlertX, etc.)
+- Application data backup (Grafana, Prometheus, etc.)
 - NFS-based backup storage
 - Backup restoration testing and validation
 - Manual backup triggers

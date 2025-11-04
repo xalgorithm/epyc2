@@ -49,7 +49,6 @@ echo "$INGRESS_IP prometheus.home"
 echo "$INGRESS_IP loki.home"
 echo "$INGRESS_IP mimir.home"
 echo "$INGRESS_IP mylar.home"
-echo "$INGRESS_IP netalertx.home"
 echo ""
 
 # Offer to add to /etc/hosts automatically
@@ -68,7 +67,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     sudo sed -i '' '/loki\.home/d' /etc/hosts 2>/dev/null || sudo sed -i '/loki\.home/d' /etc/hosts
     sudo sed -i '' '/mimir\.home/d' /etc/hosts 2>/dev/null || sudo sed -i '/mimir\.home/d' /etc/hosts
     sudo sed -i '' '/mylar\.home/d' /etc/hosts 2>/dev/null || sudo sed -i '/mylar\.home/d' /etc/hosts
-    sudo sed -i '' '/netalertx\.home/d' /etc/hosts 2>/dev/null || sudo sed -i '/netalertx\.home/d' /etc/hosts
+
     
     # Add new entries
     echo "" | sudo tee -a /etc/hosts >/dev/null
@@ -78,7 +77,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "$INGRESS_IP loki.home" | sudo tee -a /etc/hosts >/dev/null
     echo "$INGRESS_IP mimir.home" | sudo tee -a /etc/hosts >/dev/null
     echo "$INGRESS_IP mylar.home" | sudo tee -a /etc/hosts >/dev/null
-    echo "$INGRESS_IP netalertx.home" | sudo tee -a /etc/hosts >/dev/null
+
     
     echo "✅ Added entries to /etc/hosts"
 else
@@ -88,7 +87,7 @@ fi
 echo ""
 echo "🧪 Testing DNS Resolution:"
 echo "=========================="
-for host in grafana.home prometheus.home loki.home mimir.home mylar.home netalertx.home; do
+for host in grafana.home prometheus.home loki.home mimir.home mylar.home; do
     if ping -c 1 -W 1000 "$host" >/dev/null 2>&1; then
         echo "✅ $host resolves correctly"
     else
@@ -104,11 +103,11 @@ echo "• Prometheus: http://prometheus.home"
 echo "• Loki:       http://loki.home"
 echo "• Mimir:      http://mimir.home"
 echo "• Mylar:      http://mylar.home"
-echo "• NetAlertX:  http://netalertx.home"
+
 echo ""
 
 echo "🔍 Testing HTTP connectivity..."
-for service in grafana prometheus loki mimir mylar netalertx; do
+for service in grafana prometheus loki mimir mylar; do
     if curl -s --connect-timeout 5 "http://${service}.home" >/dev/null 2>&1; then
         echo "✅ $service.home is accessible"
     else

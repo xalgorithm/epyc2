@@ -48,22 +48,31 @@ terraform apply
 Run an immediate backup of all components:
 
 ```bash
-./scripts/manual-backup.sh all
+# Comprehensive backup (recommended)
+./scripts/backup/manual-backup-comprehensive.sh
+
+# Or trigger backup via Kubernetes
+./scripts/backup/trigger-manual-backup.sh
 ```
 
-Available backup types:
-- `etcd` - ETCD snapshot only
-- `resources` - Kubernetes resources only
-- `data` - Application data only
-- `all` - Complete backup (default)
+Available backup components:
+- ETCD snapshots
+- Kubernetes resources
+- Application data (Prometheus, Grafana, Loki, Mimir)
 
-### Validate Backups
+### Test Backup Restoration
 
-Check backup status and integrity:
+Test backup restoration without affecting production:
 
 ```bash
-./scripts/validate-backups.sh
+# Dry run (no actual restoration)
+./scripts/backup/test-backup-restoration.sh dry-run
+
+# Test individual component restoration
+./scripts/backup/test-individual-restore.sh <component>
 ```
+
+Available components: `grafana`, `prometheus`, `loki`, `mimir`
 
 ## 📊 Monitoring
 

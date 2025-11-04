@@ -9,9 +9,10 @@ This project deploys a complete Kubernetes infrastructure stack including:
 - **Kubernetes Cluster**: K3s-based cluster with control plane and worker nodes
 - **Load Balancing**: MetalLB for bare-metal load balancing
 - **Monitoring Stack**: Prometheus, Grafana, Loki, and Mimir for comprehensive observability
-- **Network Monitoring**: NetAlertX for network device discovery and monitoring
+- **Log Aggregation**: Syslog receiver for OPNsense and external device logs
 - **Backup System**: Automated backup solution with NFS storage
-- **Ingress**: Traefik ingress controller with SSL termination
+- **Ingress**: Nginx ingress controller with host-based routing
+- **Automation**: N8N workflow automation platform
 
 ## 🚀 Quick Start
 
@@ -93,7 +94,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 - **`k8s-cluster.tf`**: Kubernetes cluster setup
 - **`metallb.tf`**: Load balancer configuration
 - **`observability.tf`**: Monitoring stack deployment
-- **`netalertx.tf`**: Network monitoring setup
+
 - **`backup.tf`**: Backup system configuration
 - **`ingress.tf`**: Ingress controller setup
 
@@ -104,7 +105,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 - **Grafana**: Visualization and dashboards
 - **Loki**: Log aggregation and analysis
 - **Mimir**: Long-term metrics storage
-- **NetAlertX**: Network device discovery and monitoring
+
 
 #### 💾 Backup & Recovery
 - **Automated Backups**: Scheduled ETCD and application data backups
@@ -133,7 +134,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 - [Grafana Dashboards](docs/monitoring/GRAFANA_DASHBOARDS.md)
 
 ### Troubleshooting
-- [NetAlertX Setup](docs/troubleshooting/NETALERTX_SETUP.md)
+
 - [NFS Access Fix](docs/troubleshooting/NFS_ACCESS_FIX.md)
 - [Kubeconfig Issues](docs/troubleshooting/KUBECONFIG_ENCODING_FIX.md)
 
@@ -174,8 +175,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 # Update Grafana dashboards
 ./scripts/maintenance/update-grafana-dashboards.sh
 
-# Health check NetAlertX
-./scripts/maintenance/check-netalertx-health.sh
+
 ```
 
 ### Troubleshooting
@@ -184,8 +184,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 # Diagnose NFS access issues
 ./scripts/troubleshooting/diagnose-nfs-access.sh
 
-# Debug NetAlertX issues
-./scripts/troubleshooting/debug-netalertx.sh
+
 
 # Fix kubeconfig secret encoding
 ./scripts/troubleshooting/fix-kubeconfig-secret.sh
@@ -204,7 +203,7 @@ nfs_backup_path = "/data/kubernetes/backups"
 ### Default Dashboards
 - **Kubernetes Cluster Overview**: Node and pod metrics
 - **Backup Monitoring**: Backup status and performance
-- **NetAlertX Network Discovery**: Network device monitoring
+
 - **Application Metrics**: Component-specific dashboards
 
 ### Key Metrics

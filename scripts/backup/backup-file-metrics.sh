@@ -116,9 +116,7 @@ echo "" >> "$METRICS_FILE"
 echo "# HELP backup_application_files Application-specific backup file counts" >> "$METRICS_FILE"
 echo "# TYPE backup_application_files gauge" >> "$METRICS_FILE"
 
-# Count NetAlertX backups
-NETALERTX_COUNT=$(find "$BACKUP_DIR/data" -name "app.db" 2>/dev/null | wc -l)
-echo "backup_application_files{application=\"netalertx\"} $NETALERTX_COUNT" >> "$METRICS_FILE"
+
 
 # Count Grafana backups
 GRAFANA_COUNT=$(find "$BACKUP_DIR/data" -name "grafana.db" 2>/dev/null | wc -l)

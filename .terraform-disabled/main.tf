@@ -17,27 +17,13 @@ terraform {
       source  = "tenstad/remote"
       version = "~> 0.1"
     }
-    proxmox = {
-      source  = "bpg/proxmox"
-      version = "~> 0.46"
-    }
   }
 }
 
 # Configure the Kubernetes Provider
-# IMPORTANT: For fresh deployments, use a two-stage apply:
-# Stage 1: Create VMs and cluster
-#   terraform apply -target=module.cluster_bootstrap -var="bootstrap_cluster=true"
-# Stage 2: Create Kubernetes resources  
-#   terraform apply -var="bootstrap_cluster=true"
-#
-# OR use the helper script: ./scripts/deployment/deploy-full-stack.sh
 provider "kubernetes" {
   config_path = "~/.kube/config"
   insecure    = true
-  
-  # Ignore connection errors during plan when cluster doesn't exist
-  ignore_annotations = []
 }
 
 provider "helm" {
@@ -122,22 +108,9 @@ variable "dockerhub_email" {
   default     = ""
 }
 
-# Proxmox monitoring credentials
+# Proxmox monitoring credentials (for monitoring only, not VM management)
 variable "proxmox_password" {
   description = "Password for Proxmox monitoring user"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "proxmox_api_token_id" {
-  description = "Proxmox API token ID (format: user@realm!tokenname)"
-  type        = string
-  default     = ""
-}
-
-variable "proxmox_api_token_secret" {
-  description = "Proxmox API token secret"
   type        = string
   default     = ""
   sensitive   = true
@@ -161,54 +134,7 @@ variable "nfs_backup_path" {
   default     = "/data/kubernetes/backups"
 }
 
-# Proxmox VM creation variables
-variable "proxmox_api_url" {
-  description = "Proxmox API URL"
-  type        = string
-}
-
-variable "proxmox_user" {
-  description = "Proxmox user"
-  type        = string
-  default     = "root@pam"
-}
-
-variable "proxmox_tls_insecure" {
-  description = "Skip TLS verification for Proxmox API"
-  type        = bool
-  default     = true
-}
-
-variable "proxmox_node" {
-  description = "Proxmox node name"
-  type        = string
-  default     = "pve"
-}
-
-variable "vm_template" {
-  description = "VM template name to clone from"
-  type        = string
-  default     = "ubuntu-22.04-template"
-}
-
-variable "vm_template_id" {
-  description = "VM template ID to clone from"
-  type        = number
-  default     = 9000
-}
-
-variable "vm_storage" {
-  description = "Storage pool for VM disks"
-  type        = string
-  default     = "local-lvm"
-}
-
-variable "vm_network_bridge" {
-  description = "Network bridge for VMs"
-  type        = string
-  default     = "vmbr0"
-}
-
+# VM network configuration (for reference only, VMs managed externally)
 variable "vm_gateway" {
   description = "Gateway IP for VM network"
   type        = string
@@ -226,18 +152,6 @@ variable "nfs_storage_path" {
   default     = "/data/kubernetes"
 }
 
-variable "nfs_ssh_user" {
-  description = "SSH user for NFS server access"
-  type        = string
-  default     = ""  # If empty, uses ssh_user
-}
-
-variable "nfs_ssh_private_key_path" {
-  description = "SSH private key path for NFS server access"
-  type        = string
-  default     = ""  # If empty, uses ssh_private_key_path
-}
-
 
 variable "bootstrap_cluster" {
   description = "Whether Terraform should bootstrap the Kubernetes cluster (VM init, node setup, copy kubeconfig). Set to false if a control plane already exists and kubeconfig is present locally."
@@ -249,12 +163,6 @@ variable "bootstrap_cluster" {
 variable "ingress_ip" {
   description = "Static IP for ingress-nginx LoadBalancer (must be in MetalLB pool)"
   type        = string
-}
-
-variable "syslog_ip" {
-  description = "Static IP for syslog-ng receiver (for OPNsense logs, must be in MetalLB pool)"
-  type        = string
-  default     = "192.168.0.36"
 }
 
 variable "grafana_host" {
@@ -286,6 +194,8 @@ variable "mylar_host" {
   type        = string
   default     = "mylar.home"
 }
+
+
 
 
 
