@@ -13,48 +13,63 @@ resource "kubernetes_config_map" "syslog_ng_config" {
       @version: 4.5
       @include "scl.conf"
 
+      # Options for better logging
+      options {
+        keep_hostname(yes);
+        keep_timestamp(yes);
+        log_fifo_size(10000);
+      };
+
       # Source: UDP syslog from OPNsense
-      source s_opnsense {
+      source s_opnsense_udp {
         network(
-          ip(0.0.0.0)
+          ip("0.0.0.0")
           port(514)
           transport("udp")
           flags(no-parse)
+          log_iw_size(10000)
         );
+      };
+
+      # Source: TCP syslog from OPNsense
+      source s_opnsense_tcp {
         network(
-          ip(0.0.0.0)
+          ip("0.0.0.0")
           port(514)
           transport("tcp")
           flags(no-parse)
+          log_iw_size(10000)
+          max_connections(100)
         );
       };
 
-      # Destination: Loki via HTTP
-      destination d_loki {
-        http(
-          url("http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push")
-          method("POST")
-          headers(
-            "Content-Type: application/json"
-          )
-          body-suffix("\n")
-          body('$(format-json 
-            --scope rfc5424 
-            --key streams 
-            --pair label="{\\"job\\":\\"syslog\\",\\"host\\":\\"$HOST\\",\\"application\\":\\"opnsense\\"}" 
-            --pair entries="[{\\"ts\\":\\"$ISODATE\\",\\"line\\":\\"$MESSAGE\\"}]"
-          )')
-          batch-lines(100)
-          batch-timeout(1000)
-          timeout(10)
-          workers(4)
+      # Destination: File for Promtail to pick up
+      destination d_opnsense_file {
+        file("/var/log/opnsense/firewall.log"
+          template("$ISODATE $HOST $MESSAGE\n")
+          create_dirs(yes)
         );
       };
 
-      # Log processing
+      # Destination: stdout for debugging
+      destination d_stdout {
+        file("/dev/stdout"
+          template("[$ISODATE] $HOST: $MSG\n")
+        );
+      };
+
+      # Log processing - UDP
       log {
-        source(s_opnsense);
-        destination(d_loki);
+        source(s_opnsense_udp);
+        destination(d_stdout);
+        destination(d_opnsense_file);
+      };
+
+      # Log processing - TCP
+      log {
+        source(s_opnsense_tcp);
+        destination(d_stdout);
+        destination(d_opnsense_file);
       };
     EOT
   }
@@ -94,6 +109,10 @@ resource "kubernetes_deployment" "syslog_ng" {
         container {
           name  = "syslog-ng"
           image = "balabit/syslog-ng:4.5.0"
+          
+          # Override command to disable capability management
+          command = ["/usr/sbin/syslog-ng"]
+          args    = ["-F", "--no-caps"]
 
           port {
             name           = "syslog-udp"
@@ -111,6 +130,11 @@ resource "kubernetes_deployment" "syslog_ng" {
             name       = "config"
             mount_path = "/etc/syslog-ng/syslog-ng.conf"
             sub_path   = "syslog-ng.conf"
+          }
+
+          volume_mount {
+            name       = "opnsense-logs"
+            mount_path = "/var/log/opnsense"
           }
 
           resources {
@@ -146,6 +170,11 @@ resource "kubernetes_deployment" "syslog_ng" {
           config_map {
             name = kubernetes_config_map.syslog_ng_config.metadata[0].name
           }
+        }
+
+        volume {
+          name = "opnsense-logs"
+          empty_dir {}
         }
       }
     }

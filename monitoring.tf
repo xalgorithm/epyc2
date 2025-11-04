@@ -144,6 +144,11 @@ resource "kubernetes_config_map" "grafana_dashboards" {
     "kubernetes-logs-analysis.json"       = file("${path.module}/configs/grafana/kubernetes-logs-analysis.json")
     "kubernetes-resource-monitoring.json" = file("${path.module}/configs/grafana/kubernetes-resource-monitoring.json")
     "kubernetes-events-alerts.json"       = file("${path.module}/configs/grafana/kubernetes-events-alerts.json")
+
+    # OPNsense Firewall & Network Monitoring Dashboards
+    "opnsense-firewall-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-firewall-dashboard.json")
+    "opnsense-bandwidth-dashboard.json" = file("${path.module}/configs/grafana/opnsense-bandwidth-dashboard.json")
+    "opnsense-security-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-security-dashboard.json")
   }
 }
 
