@@ -149,6 +149,9 @@ resource "kubernetes_config_map" "grafana_dashboards" {
     "opnsense-firewall-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-firewall-dashboard.json")
     "opnsense-bandwidth-dashboard.json" = file("${path.module}/configs/grafana/opnsense-bandwidth-dashboard.json")
     "opnsense-security-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-security-dashboard.json")
+
+    # Home Assistant Smart Home Monitoring
+    "home-assistant-dashboard.json" = file("${path.module}/configs/grafana/home-assistant-dashboard.json")
   }
 }
 

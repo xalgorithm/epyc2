@@ -273,3 +273,32 @@ variable "nfs_backup_path" {
   default     = "/data/kubernetes/backups"
 }
 
+# =============================================================================
+# Home Assistant Integration
+# =============================================================================
+
+variable "home_assistant_enabled" {
+  description = "Enable Home Assistant monitoring integration"
+  type        = bool
+  default     = true
+}
+
+variable "home_assistant_ip" {
+  description = "IP address of Home Assistant instance"
+  type        = string
+  default     = "192.168.0.31"
+}
+
+variable "home_assistant_port" {
+  description = "Port for Home Assistant web interface"
+  type        = number
+  default     = 8123
+}
+
+variable "home_assistant_api_token" {
+  description = "Home Assistant Long-Lived Access Token for API authentication"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+

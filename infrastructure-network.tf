@@ -155,6 +155,53 @@ resource "helm_release" "ingress_nginx" {
     value = var.ingress_ip
   }
 
+  # Enable HTTP/2 support
+  set {
+    name  = "controller.config.use-http2"
+    value = "true"
+  }
+
+  # Enable HTTP/2 push (for better performance)
+  set {
+    name  = "controller.config.http2-push-preload"
+    value = "true"
+  }
+
+  # Optimize proxy buffer settings for HTTP/2
+  set {
+    name  = "controller.config.proxy-buffer-size"
+    value = "128k"
+  }
+
+  set {
+    name  = "controller.config.proxy-buffers-number"
+    value = "4"
+  }
+
+  # Enable gzip compression
+  set {
+    name  = "controller.config.enable-gzip"
+    value = "true"
+  }
+
+  # Set larger body size for uploads
+  set {
+    name  = "controller.config.proxy-body-size"
+    value = "50m"
+  }
+
+  # Optimize keepalive connections
+  set {
+    name  = "controller.config.keep-alive-requests"
+    value = "1000"
+  }
+
+  # Enable upstream keepalive
+  set {
+    name  = "controller.config.upstream-keepalive-connections"
+    value = "100"
+  }
+
   depends_on = [
     null_resource.kubeconfig_ready,
     null_resource.cluster_api_ready,

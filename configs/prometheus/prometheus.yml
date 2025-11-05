@@ -112,6 +112,38 @@ scrape_configs:
         action: replace
         target_label: kubernetes_name
 
+  # Home Assistant metrics scraping
+  - job_name: 'home-assistant'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: '/api/prometheus'
+    scheme: http
+    static_configs:
+      - targets: ['192.168.0.31:8123']
+        labels:
+          instance: 'home-assistant'
+          environment: 'homelab'
+    # Uncomment if you need authentication (most HA setups require this)
+    # authorization:
+    #   type: Bearer
+    #   credentials: ${HOME_ASSISTANT_TOKEN}
+
+  # Proxmox VE metrics scraping
+  - job_name: 'proxmox'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    metrics_path: '/pve'
+    static_configs:
+      - targets: ['proxmox-exporter.monitoring.svc.cluster.local:9221']
+        labels:
+          cluster: 'homelab'
+          environment: 'homelab'
+    # Query parameters required by pve-exporter
+    params:
+      module: [default]
+      target: ['192.168.0.7']
+      cluster: ['1']
+      node: ['1']
 
 remote_write:
   - url: http://mimir-distributor.monitoring.svc.cluster.local:8080/api/v1/push

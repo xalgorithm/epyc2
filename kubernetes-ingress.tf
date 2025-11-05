@@ -11,7 +11,29 @@ resource "kubernetes_ingress_v1" "grafana" {
     name      = "grafana"
     namespace = "monitoring"
     annotations = {
+      # Backend protocol - using HTTP for internal cluster communication
       "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+      
+      # Enable HTTP/2 support (nginx ingress enables this by default for HTTPS)
+      # For HTTP, ensure nginx is configured to allow it
+      "nginx.ingress.kubernetes.io/use-http2" = "true"
+      
+      # Proxy settings for better performance with HTTP/2
+      "nginx.ingress.kubernetes.io/proxy-body-size"        = "50m"
+      "nginx.ingress.kubernetes.io/proxy-buffer-size"      = "128k"
+      "nginx.ingress.kubernetes.io/proxy-buffers-number"   = "4"
+      "nginx.ingress.kubernetes.io/proxy-busy-buffers-size" = "256k"
+      
+      # Connection settings for better HTTP/2 performance
+      "nginx.ingress.kubernetes.io/proxy-connect-timeout" = "600"
+      "nginx.ingress.kubernetes.io/proxy-send-timeout"    = "600"
+      "nginx.ingress.kubernetes.io/proxy-read-timeout"    = "600"
+      
+      # Enable WebSocket support (important for Grafana live updates)
+      "nginx.ingress.kubernetes.io/websocket-services" = "grafana"
+      
+      # Enable connection upgrade for WebSockets
+      "nginx.ingress.kubernetes.io/proxy-http-version" = "1.1"
     }
   }
 

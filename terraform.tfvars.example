@@ -63,6 +63,16 @@ nfs_ssh_private_key_path   = "~/.ssh/id_rsa"  # SSH key for NFS server (if diffe
 backup_retention_days = 30
 
 # =============================================================================
+# Home Assistant Integration
+# =============================================================================
+
+home_assistant_enabled   = true
+home_assistant_ip        = "192.168.0.31"
+home_assistant_port      = 8123
+home_assistant_api_token = "your-long-lived-access-token-here"
+# Generate token in Home Assistant: Profile → Long-Lived Access Tokens
+
+# =============================================================================
 # Docker Hub Configuration (for private images)
 # =============================================================================
 
@@ -123,4 +133,11 @@ mylar_host      = "mylar.home"
 # 6. OPNsense Logging:
 #    - Configure OPNsense to send syslog to: 192.168.0.36:514
 #    - See docs/OPNSENSE_LOGGING.md for details
+#
+# 7. Home Assistant Integration:
+#    - Enable Prometheus integration in Home Assistant configuration.yaml:
+#      prometheus:
+#        namespace: homeassistant
+#    - Generate Long-Lived Access Token: Profile → Security → Long-Lived Access Tokens
+#    - Token is used for additional API-based monitoring
 

@@ -487,7 +487,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "count(kube_persistentvolume_info)",
+          "expr": "count(kube_persistentvolume_info{job=\"kubernetes-service-endpoints\"})",
           "refId": "A"
         }
       ],
@@ -1445,7 +1445,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "kube_persistentvolume_capacity_bytes",
+          "expr": "kube_persistentvolume_capacity_bytes{job=\"kubernetes-service-endpoints\"}",
           "legendFormat": "{{persistentvolume}} - {{storageclass}}",
           "refId": "A"
         }
@@ -1547,7 +1547,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "kube_persistentvolume_status_phase * on (persistentvolume) group_left(storageclass) kube_persistentvolume_info",
+          "expr": "kube_persistentvolume_status_phase{job=\"kubernetes-service-endpoints\"} * on (persistentvolume) group_left(storageclass) kube_persistentvolume_info{job=\"kubernetes-service-endpoints\"}",
           "format": "table",
           "instant": true,
           "refId": "A"
