@@ -30,6 +30,15 @@ output "vm_info" {
       role  = "worker"
       disk  = "256GB"
     }
+    work = {
+      vm_id = proxmox_virtual_environment_vm.work.vm_id
+      name  = proxmox_virtual_environment_vm.work.name
+      ip    = var.work_vm_ip
+      role  = "standalone"
+      disk  = "64GB"
+      fqdn  = "work.xalg.im"
+      nfs_mount = "192.168.0.7:/data -> /data"
+    }
   }
 }
 

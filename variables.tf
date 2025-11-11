@@ -21,6 +21,12 @@ variable "worker_ips" {
   type        = list(string)
 }
 
+variable "work_vm_ip" {
+  description = "IP address for work VM"
+  type        = string
+  default     = "192.168.0.50"
+}
+
 variable "worker_names" {
   description = "Names of worker nodes"
   type        = list(string)
@@ -211,6 +217,12 @@ variable "vm_template_id" {
   description = "VM template ID to clone from"
   type        = number
   default     = 9000
+}
+
+variable "debian_template_id" {
+  description = "Debian VM template ID to clone from"
+  type        = number
+  default     = 9001
 }
 
 variable "vm_storage" {
