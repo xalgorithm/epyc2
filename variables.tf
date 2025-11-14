@@ -34,6 +34,40 @@ variable "worker_names" {
 }
 
 # =============================================================================
+# Rebellion Cluster Configuration
+# =============================================================================
+
+variable "rebellion_control_plane_ip" {
+  description = "IP address of the rebellion control plane node (Luke)"
+  type        = string
+  default     = "192.168.0.40"
+}
+
+variable "rebellion_worker_ips" {
+  description = "IP addresses of rebellion worker nodes (Leia, Han)"
+  type        = list(string)
+  default     = ["192.168.0.41", "192.168.0.42"]
+}
+
+variable "rebellion_vm_names" {
+  description = "Names of rebellion cluster nodes"
+  type        = list(string)
+  default     = ["luke", "leia", "han"]
+}
+
+variable "rebellion_metallb_pool_start" {
+  description = "Start IP for rebellion MetalLB pool"
+  type        = string
+  default     = "192.168.0.43"
+}
+
+variable "rebellion_metallb_pool_end" {
+  description = "End IP for rebellion MetalLB pool"
+  type        = string
+  default     = "192.168.0.49"
+}
+
+# =============================================================================
 # Kubernetes Configuration
 # =============================================================================
 

@@ -1,0 +1,100 @@
+{
+  "dashboard": {
+    "title": "Rebellion Cluster Overview",
+    "tags": ["rebellion", "kubernetes", "cluster"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Cluster Nodes Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{cluster=\"rebellion\",job=\"rebellion-nodes\"}",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "CPU Usage by Node",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{cluster=\"rebellion\",mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 3,
+        "title": "Memory Usage by Node",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - ((node_memory_MemAvailable_bytes{cluster=\"rebellion\"} / node_memory_MemTotal_bytes{cluster=\"rebellion\"}) * 100)",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 4,
+        "title": "Disk Usage by Node",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - ((node_filesystem_avail_bytes{cluster=\"rebellion\",mountpoint=\"/\"} / node_filesystem_size_bytes{cluster=\"rebellion\",mountpoint=\"/\"}) * 100)",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 5,
+        "title": "Network Traffic",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total{cluster=\"rebellion\",device!~\"lo|veth.*\"}[5m])",
+            "legendFormat": "{{instance}} - RX"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total{cluster=\"rebellion\",device!~\"lo|veth.*\"}[5m])",
+            "legendFormat": "{{instance}} - TX"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 6,
+        "title": "Pod Count by Namespace",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "count by (namespace) (kube_pod_info{cluster=\"rebellion\"})",
+            "legendFormat": "{{namespace}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+      },
+      {
+        "id": 7,
+        "title": "Pod Status",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (phase) (kube_pod_status_phase{cluster=\"rebellion\"})",
+            "legendFormat": "{{phase}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+      }
+    ],
+    "schemaVersion": 16,
+    "version": 1
+  }
+}
+

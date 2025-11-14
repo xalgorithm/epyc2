@@ -42,6 +42,53 @@ output "vm_info" {
   }
 }
 
+# Rebellion Cluster Information
+output "rebellion_vm_info" {
+  description = "Rebellion cluster VM information"
+  value = {
+    luke = {
+      vm_id = proxmox_virtual_environment_vm.luke.vm_id
+      name  = proxmox_virtual_environment_vm.luke.name
+      ip    = var.rebellion_control_plane_ip
+      role  = "control-plane"
+      disk  = "128GB"
+      cpu   = "4 cores"
+      memory = "8GB"
+    }
+    leia = {
+      vm_id = proxmox_virtual_environment_vm.leia.vm_id
+      name  = proxmox_virtual_environment_vm.leia.name
+      ip    = var.rebellion_worker_ips[0]
+      role  = "worker"
+      disk  = "128GB"
+      cpu   = "4 cores"
+      memory = "8GB"
+    }
+    han = {
+      vm_id = proxmox_virtual_environment_vm.han.vm_id
+      name  = proxmox_virtual_environment_vm.han.name
+      ip    = var.rebellion_worker_ips[1]
+      role  = "worker"
+      disk  = "128GB"
+      cpu   = "4 cores"
+      memory = "8GB"
+    }
+  }
+}
+
+output "rebellion_cluster_info" {
+  description = "Rebellion Kubernetes cluster configuration"
+  value = {
+    cluster_name          = "rebellion"
+    control_plane_ip      = var.rebellion_control_plane_ip
+    worker_ips            = var.rebellion_worker_ips
+    vm_names              = var.rebellion_vm_names
+    metallb_pool_start    = var.rebellion_metallb_pool_start
+    metallb_pool_end      = var.rebellion_metallb_pool_end
+    kubeconfig_path       = "~/.kube/configs/rebellion-config"
+  }
+}
+
 # Cluster Information
 output "cluster_info" {
   description = "Kubernetes cluster information"

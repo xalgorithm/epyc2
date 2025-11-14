@@ -1,0 +1,10 @@
+name: rebellion-cluster
+runtime:
+  name: nodejs
+  options:
+    typescript: true
+description: Istio Gateway API deployment for Rebellion Kubernetes cluster
+config:
+  kubernetes:kubeconfig:
+    value: ~/.kube/configs/rebellion-config
+
