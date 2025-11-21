@@ -104,6 +104,16 @@ resource "kubernetes_deployment" "mylar" {
             mount_path = "/data"
           }
 
+          volume_mount {
+            name       = "mylar-comics"
+            mount_path = "/comics"
+          }
+
+          volume_mount {
+            name       = "mylar-downloads"
+            mount_path = "/downloads"
+          }
+
           # Health checks
           liveness_probe {
             http_get {
@@ -142,6 +152,22 @@ resource "kubernetes_deployment" "mylar" {
           nfs {
             server = var.nfs_storage_server
             path   = var.nfs_storage_path
+          }
+        }
+
+        volume {
+          name = "mylar-comics"
+          nfs {
+            server = "192.168.0.3"
+            path   = "/mnt/red-nas/comics/Comics"
+          }
+        }
+
+        volume {
+          name = "mylar-downloads"
+          nfs {
+            server = var.nfs_storage_server
+            path   = "${var.nfs_storage_path}/mylar-downloads"
           }
         }
       }
