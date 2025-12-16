@@ -73,7 +73,7 @@ resource "kubernetes_deployment" "mylar" {
 
           env {
             name  = "TZ"
-            value = "America/New_York"
+            value = "America/Los_Angeles"
           }
 
           port {
@@ -85,11 +85,11 @@ resource "kubernetes_deployment" "mylar" {
           resources {
             requests = {
               cpu    = "100m"
-              memory = "256Mi"
+              memory = "512Mi"
             }
             limits = {
               cpu    = "1000m"
-              memory = "1Gi"
+              memory = "2Gi"
             }
           }
 
