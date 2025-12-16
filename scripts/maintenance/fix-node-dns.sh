@@ -3,17 +3,21 @@
 # Fix DNS Resolution on Kubernetes Nodes
 # This script updates systemd-resolved on all nodes to use Cloudflare DNS
 
-set -e
+# Note: NOT using 'set -e' to ensure all nodes are attempted even if one fails
 
 # Configuration
 CONTROL_PLANE_IP="192.168.0.32"  # bumblebee
 WORKER_IPS=("192.168.0.34" "192.168.0.33")  # prime, wheeljack
 WORKER_NAMES=("prime" "wheeljack")
 SSH_USER="ubuntu"
-SSH_KEY="~/.ssh/maint-rsa"
+SSH_KEY="${HOME}/.ssh/maint-rsa"  # Use ${HOME} instead of ~ for proper expansion
 
 # DNS servers to use (Cloudflare)
 DNS_SERVERS="1.1.1.1 1.0.0.1"
+
+# Track failures
+FAILED_NODES=()
+SUCCESS_NODES=()
 
 # Colors for output
 RED='\033[0;31m'
@@ -52,7 +56,7 @@ fix_dns_on_node() {
     
     # Update DNS configuration
     log_info "  Updating DNS servers to: ${DNS_SERVERS}..."
-    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${SSH_USER}@${node_ip} "sudo bash -c 'cat > /tmp/resolved.conf << EOF
+    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${SSH_USER}@${node_ip} "sudo bash -c 'cat > /tmp/resolved.conf << \"EOF\"
 [Resolve]
 DNS=${DNS_SERVERS}
 FallbackDNS=8.8.8.8 8.8.4.4
@@ -121,24 +125,60 @@ echo "=========================================="
 echo ""
 
 # Fix DNS on control plane
-fix_dns_on_node "bumblebee" "${CONTROL_PLANE_IP}"
+if fix_dns_on_node "bumblebee" "${CONTROL_PLANE_IP}"; then
+    SUCCESS_NODES+=("bumblebee")
+else
+    FAILED_NODES+=("bumblebee")
+    log_warn "Control plane DNS fix failed, but continuing with workers..."
+fi
 
-# Fix DNS on workers
+# Fix DNS on workers (always attempt, even if control plane failed)
 for i in "${!WORKER_IPS[@]}"; do
-    fix_dns_on_node "${WORKER_NAMES[$i]}" "${WORKER_IPS[$i]}"
+    if fix_dns_on_node "${WORKER_NAMES[$i]}" "${WORKER_IPS[$i]}"; then
+        SUCCESS_NODES+=("${WORKER_NAMES[$i]}")
+    else
+        FAILED_NODES+=("${WORKER_NAMES[$i]}")
+    fi
 done
 
 echo "=========================================="
-log_info "DNS fix complete on all nodes!"
+echo "DNS Fix Summary"
 echo "=========================================="
 echo ""
-log_info "Next steps:"
-echo "  1. Wait 1-2 minutes for containerd to pick up DNS changes"
-echo "  2. Restart any pods stuck in ImagePullBackOff:"
-echo "     kubectl delete pod -n media -l app=mylar"
-echo "  3. Check CoreDNS pods:"
-echo "     kubectl get pods -n kube-system -l k8s-app=kube-dns"
-echo "  4. If CoreDNS is stuck, delete pods to restart:"
-echo "     kubectl delete pod -n kube-system -l k8s-app=kube-dns"
-echo ""
+
+if [ ${#SUCCESS_NODES[@]} -gt 0 ]; then
+    log_info "Successfully fixed DNS on ${#SUCCESS_NODES[@]} node(s):"
+    for node in "${SUCCESS_NODES[@]}"; do
+        echo "  ✓ ${node}"
+    done
+    echo ""
+fi
+
+if [ ${#FAILED_NODES[@]} -gt 0 ]; then
+    log_error "Failed to fix DNS on ${#FAILED_NODES[@]} node(s):"
+    for node in "${FAILED_NODES[@]}"; do
+        echo "  ✗ ${node}"
+    done
+    echo ""
+    log_warn "Please investigate failed nodes and retry if needed"
+    echo ""
+fi
+
+if [ ${#FAILED_NODES[@]} -eq 0 ]; then
+    log_info "✓ DNS fix complete on all nodes!"
+    echo ""
+    log_info "Next steps:"
+    echo "  1. Wait 1-2 minutes for containerd to pick up DNS changes"
+    echo "  2. Restart any pods stuck in ImagePullBackOff:"
+    echo "     kubectl delete pod -n media -l app=mylar"
+    echo "  3. Check CoreDNS pods:"
+    echo "     kubectl get pods -n kube-system -l k8s-app=kube-dns"
+    echo "  4. If CoreDNS is stuck, delete pods to restart:"
+    echo "     kubectl delete pod -n kube-system -l k8s-app=kube-dns"
+    echo ""
+    exit 0
+else
+    log_error "Some nodes failed - manual intervention required"
+    exit 1
+fi
 

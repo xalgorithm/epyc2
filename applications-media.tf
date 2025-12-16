@@ -73,7 +73,7 @@ resource "kubernetes_deployment" "mylar" {
 
           env {
             name  = "TZ"
-            value = "America/Los_Angeles"
+            value = "America/New_York"
           }
 
           port {
