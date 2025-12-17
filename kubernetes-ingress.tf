@@ -319,3 +319,77 @@ resource "kubernetes_ingress_v1" "prowlarr" {
   ]
 }
 
+# Sonarr Ingress
+resource "kubernetes_ingress_v1" "sonarr" {
+  metadata {
+    name      = "sonarr"
+    namespace = "media"
+    annotations = {
+      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = var.sonarr_host
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.sonarr.metadata[0].name
+              port {
+                number = 8989
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.ingress_nginx,
+    kubernetes_service.sonarr
+  ]
+}
+
+# Radarr Ingress
+resource "kubernetes_ingress_v1" "radarr" {
+  metadata {
+    name      = "radarr"
+    namespace = "media"
+    annotations = {
+      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = var.radarr_host
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.radarr.metadata[0].name
+              port {
+                number = 7878
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.ingress_nginx,
+    kubernetes_service.radarr
+  ]
+}
+

@@ -179,6 +179,18 @@ variable "prowlarr_host" {
   default     = "prowlarr.home"
 }
 
+variable "sonarr_host" {
+  description = "Hostname for Sonarr Ingress"
+  type        = string
+  default     = "sonarr.home"
+}
+
+variable "radarr_host" {
+  description = "Hostname for Radarr Ingress"
+  type        = string
+  default     = "radarr.home"
+}
+
 # =============================================================================
 # Docker Hub Configuration
 # =============================================================================
