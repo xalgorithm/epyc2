@@ -244,3 +244,78 @@ resource "kubernetes_ingress_v1" "n8n" {
   }
 }
 
+# SABnzbd Ingress
+resource "kubernetes_ingress_v1" "sabnzbd" {
+  metadata {
+    name      = "sabnzbd"
+    namespace = "media"
+    annotations = {
+      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+      "nginx.ingress.kubernetes.io/proxy-body-size"  = "100m"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = var.sabnzbd_host
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.sabnzbd.metadata[0].name
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.ingress_nginx,
+    kubernetes_service.sabnzbd
+  ]
+}
+
+# Prowlarr Ingress
+resource "kubernetes_ingress_v1" "prowlarr" {
+  metadata {
+    name      = "prowlarr"
+    namespace = "media"
+    annotations = {
+      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTP"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = var.prowlarr_host
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.prowlarr.metadata[0].name
+              port {
+                number = 9696
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.ingress_nginx,
+    kubernetes_service.prowlarr
+  ]
+}
+

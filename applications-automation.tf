@@ -83,6 +83,17 @@ resource "kubernetes_deployment" "n8n" {
       }
 
       spec {
+        # DNS configuration to work around Alpine/musl-libc DNS issues
+        dns_policy = "None"
+        dns_config {
+          nameservers = ["10.96.0.10", "1.1.1.1", "8.8.8.8"]
+          searches    = ["automation.svc.cluster.local", "svc.cluster.local", "cluster.local"]
+          option {
+            name  = "ndots"
+            value = "5"
+          }
+        }
+
         # Init container to fix permissions
         init_container {
           name  = "n8n-init"
@@ -161,11 +172,11 @@ resource "kubernetes_deployment" "n8n" {
           resources {
             requests = {
               cpu    = "100m"
-              memory = "256Mi"
+              memory = "2Gi"
             }
             limits = {
               cpu    = "1000m"
-              memory = "1Gi"
+              memory = "3Gi"
             }
           }
 

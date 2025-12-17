@@ -76,6 +76,11 @@ resource "kubernetes_deployment" "mylar" {
             value = "America/New_York"
           }
 
+          env {
+            name  = "HOST_WHITELIST"
+            value = "sabnzbd.home,sabnzbd"
+          }
+
           port {
             container_port = 8090
             name           = "http"
@@ -84,12 +89,12 @@ resource "kubernetes_deployment" "mylar" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "512Mi"
+              cpu    = "130m"
+              memory = "2.6Gi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "2Gi"
+              cpu    = "1300m"
+              memory = "3.9Gi"
             }
           }
 
@@ -112,6 +117,11 @@ resource "kubernetes_deployment" "mylar" {
           volume_mount {
             name       = "mylar-downloads"
             mount_path = "/downloads"
+          }
+
+          volume_mount {
+            name       = "nzb-downloads"
+            mount_path = "/nzb-downloads"
           }
 
           # Health checks
@@ -170,6 +180,14 @@ resource "kubernetes_deployment" "mylar" {
             path   = "${var.nfs_storage_path}/mylar-downloads"
           }
         }
+
+        volume {
+          name = "nzb-downloads"
+          nfs {
+            server = "192.168.0.2"
+            path   = "/volume2/Downloads/sabnzbd/completed/comics"
+          }
+        }
       }
     }
   }
@@ -198,6 +216,342 @@ resource "kubernetes_service" "mylar" {
       name        = "http"
       port        = 8090
       target_port = 8090
+      protocol    = "TCP"
+    }
+  }
+}
+
+# =============================================================================
+# SABnzbd - Usenet Downloader
+# =============================================================================
+
+# SABnzbd Deployment
+resource "kubernetes_deployment" "sabnzbd" {
+  depends_on       = [kubernetes_namespace.media]
+  wait_for_rollout = false
+
+  metadata {
+    name      = "sabnzbd"
+    namespace = "media"
+    labels = {
+      app = "sabnzbd"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "sabnzbd"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "sabnzbd"
+        }
+      }
+
+      spec {
+        # Security context for NFS access
+        security_context {
+          fs_group = 1000
+        }
+
+        container {
+          name  = "sabnzbd"
+          image = "bmoorman/sabnzbd:latest"
+
+          # Environment variables
+          env {
+            name  = "SABNZBD_UID"
+            value = "1000"
+          }
+
+          env {
+            name  = "SABNZBD_GID"
+            value = "1000"
+          }
+
+          env {
+            name  = "TZ"
+            value = "America/Los_Angeles"
+          }
+
+          env {
+            name  = "HOST_WHITELIST_ENTRIES"
+            value = "sabnzbd.home,sabnzbd,localhost"
+          }
+
+          port {
+            container_port = 8080
+            name           = "http"
+          }
+
+          # Resource limits
+          resources {
+            requests = {
+              cpu    = "100m"
+              memory = "1Gi"
+            }
+            limits = {
+              cpu    = "1000m"
+              memory = "2Gi"
+            }
+          }
+
+          # Volume mounts
+          volume_mount {
+            name       = "sabnzbd-config"
+            mount_path = "/config"
+          }
+
+          volume_mount {
+            name       = "sabnzbd-data"
+            mount_path = "/data"
+          }
+
+          volume_mount {
+            name       = "sabnzbd-downloads"
+            mount_path = "/downloads"
+          }
+
+          # Health checks
+          liveness_probe {
+            http_get {
+              path = "/"
+              port = 8080
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 30
+            timeout_seconds       = 10
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/"
+              port = 8080
+            }
+            initial_delay_seconds = 15
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+        }
+
+        # Volumes
+        volume {
+          name = "sabnzbd-config"
+          nfs {
+            server = "192.168.0.2"
+            path   = "/volume1/Apps/sabnzbd"
+          }
+        }
+
+        volume {
+          name = "sabnzbd-data"
+          nfs {
+            server = "192.168.0.2"
+            path   = "/volume2/Downloads/sabnzbd"
+          }
+        }
+
+        volume {
+          name = "sabnzbd-downloads"
+          nfs {
+            server = "192.168.0.2"
+            path   = "/volume2/Downloads/sabnzbd/incomplete"
+          }
+        }
+      }
+    }
+  }
+}
+
+# SABnzbd Service
+resource "kubernetes_service" "sabnzbd" {
+  depends_on = [kubernetes_deployment.sabnzbd]
+
+  metadata {
+    name      = "sabnzbd"
+    namespace = "media"
+    labels = {
+      app = "sabnzbd"
+    }
+  }
+
+  spec {
+    type = "ClusterIP"
+
+    selector = {
+      app = "sabnzbd"
+    }
+
+    port {
+      name        = "http"
+      port        = 8080
+      target_port = 8080
+      protocol    = "TCP"
+    }
+  }
+}
+
+# =============================================================================
+# Prowlarr - Indexer Manager
+# =============================================================================
+
+# Prowlarr Deployment
+resource "kubernetes_deployment" "prowlarr" {
+  depends_on       = [kubernetes_namespace.media]
+  wait_for_rollout = false
+
+  metadata {
+    name      = "prowlarr"
+    namespace = "media"
+    labels = {
+      app = "prowlarr"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "prowlarr"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "prowlarr"
+        }
+      }
+
+      spec {
+        # Security context for NFS access
+        security_context {
+          fs_group = 1000
+        }
+
+        # DNS configuration to work around Alpine/musl-libc DNS issues
+        dns_policy = "None"
+        dns_config {
+          nameservers = ["10.96.0.10", "1.1.1.1", "8.8.8.8"]
+          searches    = ["media.svc.cluster.local", "svc.cluster.local", "cluster.local"]
+          option {
+            name  = "ndots"
+            value = "5"
+          }
+        }
+
+        container {
+          name  = "prowlarr"
+          image = "lscr.io/linuxserver/prowlarr:latest"
+
+          # Environment variables
+          env {
+            name  = "PUID"
+            value = "1000"
+          }
+
+          env {
+            name  = "PGID"
+            value = "1000"
+          }
+
+          env {
+            name  = "TZ"
+            value = "America/Los_Angeles"
+          }
+
+          port {
+            container_port = 9696
+            name           = "http"
+          }
+
+          # Resource limits
+          resources {
+            requests = {
+              cpu    = "100m"
+              memory = "512Mi"
+            }
+            limits = {
+              cpu    = "1000m"
+              memory = "1Gi"
+            }
+          }
+
+          # Volume mounts
+          volume_mount {
+            name       = "prowlarr-config"
+            mount_path = "/config"
+          }
+
+          # Health checks
+          liveness_probe {
+            http_get {
+              path = "/"
+              port = 9696
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 30
+            timeout_seconds       = 10
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/"
+              port = 9696
+            }
+            initial_delay_seconds = 15
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+        }
+
+        # Volumes
+        volume {
+          name = "prowlarr-config"
+          nfs {
+            server = "192.168.0.2"
+            path   = "/volume1/Apps/prowlarr"
+          }
+        }
+      }
+    }
+  }
+}
+
+# Prowlarr Service
+resource "kubernetes_service" "prowlarr" {
+  depends_on = [kubernetes_deployment.prowlarr]
+
+  metadata {
+    name      = "prowlarr"
+    namespace = "media"
+    labels = {
+      app = "prowlarr"
+    }
+  }
+
+  spec {
+    type = "ClusterIP"
+
+    selector = {
+      app = "prowlarr"
+    }
+
+    port {
+      name        = "http"
+      port        = 9696
+      target_port = 9696
       protocol    = "TCP"
     }
   }

@@ -167,6 +167,18 @@ variable "mylar_host" {
   default     = "mylar.home"
 }
 
+variable "sabnzbd_host" {
+  description = "Hostname for SABnzbd Ingress"
+  type        = string
+  default     = "sabnzbd.home"
+}
+
+variable "prowlarr_host" {
+  description = "Hostname for Prowlarr Ingress"
+  type        = string
+  default     = "prowlarr.home"
+}
+
 # =============================================================================
 # Docker Hub Configuration
 # =============================================================================
