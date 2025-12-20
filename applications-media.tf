@@ -89,12 +89,12 @@ resource "kubernetes_deployment" "mylar" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "130m"
-              memory = "2.6Gi"
+              cpu    = "195m"
+              memory = "3.9Gi"
             }
             limits = {
-              cpu    = "1300m"
-              memory = "3.9Gi"
+              cpu    = "1950m"
+              memory = "5.9Gi"
             }
           }
 
@@ -141,10 +141,10 @@ resource "kubernetes_deployment" "mylar" {
               path = "/"
               port = 8090
             }
-            initial_delay_seconds = 15
-            period_seconds        = 10
-            timeout_seconds       = 5
-            failure_threshold     = 3
+            initial_delay_seconds = 60
+            period_seconds        = 20
+            failure_threshold     = 10
+            timeout_seconds       = 15
           }
         }
 
@@ -303,12 +303,12 @@ resource "kubernetes_deployment" "sabnzbd" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "1Gi"
+              cpu    = "150m"
+              memory = "1.5Gi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "2Gi"
+              cpu    = "1500m"
+              memory = "3Gi"
             }
           }
 
@@ -645,12 +645,12 @@ resource "kubernetes_deployment" "sonarr" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "512Mi"
+              cpu    = "150m"
+              memory = "768Mi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "1Gi"
+              cpu    = "1500m"
+              memory = "1.5Gi"
             }
           }
 
@@ -829,12 +829,12 @@ resource "kubernetes_deployment" "radarr" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "512Mi"
+              cpu    = "150m"
+              memory = "768Mi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "1Gi"
+              cpu    = "1500m"
+              memory = "1.5Gi"
             }
           }
 
