@@ -79,20 +79,27 @@ resource "kubernetes_config_map" "backup_scripts" {
 
   data = {
     "etcd-backup.sh"                 = file("${path.module}/scripts/backup/etcd-backup.sh")
+    "etcd-backup-kube.sh"            = file("${path.module}/scripts/backup/etcd-backup-kube.sh")
     "k3s-etcd-backup.sh"             = file("${path.module}/scripts/backup/k3s-etcd-backup.sh")
     "data-backup.sh"                 = file("${path.module}/scripts/backup/data-backup.sh")
+    "mylar-backup.sh"                = file("${path.module}/scripts/backup/mylar-backup.sh")
+    "radarr-backup.sh"               = file("${path.module}/scripts/backup/radarr-backup.sh")
     "manual-backup-comprehensive.sh" = file("${path.module}/scripts/backup/manual-backup-comprehensive.sh")
     "test-backup-connectivity.sh"    = file("${path.module}/scripts/maintenance/test-backup-connectivity.sh")
     "test-nfs-permissions.sh"        = file("${path.module}/scripts/maintenance/test-nfs-permissions.sh")
     "fix-kubeconfig-secret.sh"       = file("${path.module}/scripts/troubleshooting/fix-kubeconfig-secret.sh")
     "diagnose-nfs-access.sh"         = file("${path.module}/scripts/troubleshooting/diagnose-nfs-access.sh")
     "fix-nfs-permissions.sh"         = file("${path.module}/scripts/maintenance/fix-nfs-permissions.sh")
-    "restore-etcd.sh"                = file("${path.module}/scripts/backup/restore-etcd.sh")
-
-    "restore-grafana.sh"    = file("${path.module}/scripts/backup/restore-grafana.sh")
+    
+    # Restore scripts
+    "restore-etcd.sh"      = file("${path.module}/scripts/backup/restore-etcd.sh")
+    "restore-etcd-kube.sh" = file("${path.module}/scripts/backup/restore-etcd-kube.sh")
+    "restore-mylar.sh"     = file("${path.module}/scripts/backup/restore-mylar.sh")
+    "restore-radarr.sh"    = file("${path.module}/scripts/backup/restore-radarr.sh")
+    "restore-grafana.sh"   = file("${path.module}/scripts/backup/restore-grafana.sh")
     "restore-prometheus.sh" = file("${path.module}/scripts/backup/restore-prometheus.sh")
-    "restore-loki.sh"       = file("${path.module}/scripts/backup/restore-loki.sh")
-    "restore-mimir.sh"      = file("${path.module}/scripts/backup/restore-mimir.sh")
+    "restore-loki.sh"      = file("${path.module}/scripts/backup/restore-loki.sh")
+    "restore-mimir.sh"     = file("${path.module}/scripts/backup/restore-mimir.sh")
 
     "backup-file-metrics.sh" = file("${path.module}/scripts/backup/backup-file-metrics.sh")
     "backup-cleanup.sh"      = file("${path.module}/scripts/backup/backup-cleanup.sh")
@@ -711,6 +718,350 @@ resource "kubernetes_deployment" "backup_metrics" {
         volume {
           name = "textfile-collector"
           empty_dir {}
+        }
+      }
+    }
+  }
+}
+
+# =============================================================================
+# Application Backups for Media Services
+# =============================================================================
+
+# Mylar Backup CronJob
+resource "kubernetes_cron_job_v1" "mylar_backup" {
+  depends_on = [kubernetes_config_map.backup_scripts, kubernetes_service_account.backup]
+
+  metadata {
+    name      = "mylar-backup"
+    namespace = "backup"
+    labels = {
+      app = "mylar-backup"
+    }
+  }
+
+  spec {
+    schedule                      = "0 1 * * *" # Daily at 1 AM
+    successful_jobs_history_limit = 3
+    failed_jobs_history_limit     = 1
+
+    job_template {
+      metadata {
+        labels = {
+          app = "mylar-backup"
+        }
+      }
+
+      spec {
+        template {
+          metadata {
+            labels = {
+              app = "mylar-backup"
+            }
+          }
+
+          spec {
+            service_account_name = "backup"
+            restart_policy       = "OnFailure"
+
+            container {
+              name    = "mylar-backup"
+              image   = "alpine:3.18"
+              command = ["/bin/sh"]
+              args    = ["/scripts/mylar-backup.sh"]
+
+              env {
+                name  = "BACKUP_DIR"
+                value = "/backup"
+              }
+
+              volume_mount {
+                name       = "backup-scripts"
+                mount_path = "/scripts"
+              }
+
+              volume_mount {
+                name       = "mylar-config"
+                mount_path = "/config"
+                read_only  = true
+              }
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+
+              resources {
+                requests = {
+                  cpu    = "100m"
+                  memory = "128Mi"
+                }
+                limits = {
+                  cpu    = "500m"
+                  memory = "512Mi"
+                }
+              }
+            }
+
+            volume {
+              name = "backup-scripts"
+              config_map {
+                name         = "backup-scripts"
+                default_mode = "0755"
+              }
+            }
+
+            volume {
+              name = "mylar-config"
+              nfs {
+                server = "192.168.0.2"
+                path   = "/volume1/Apps/mylar"
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              nfs {
+                server = "192.168.0.2"
+                path   = "/volume1/Apps/kube-backups"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Radarr Backup CronJob
+resource "kubernetes_cron_job_v1" "radarr_backup" {
+  depends_on = [kubernetes_config_map.backup_scripts, kubernetes_service_account.backup]
+
+  metadata {
+    name      = "radarr-backup"
+    namespace = "backup"
+    labels = {
+      app = "radarr-backup"
+    }
+  }
+
+  spec {
+    schedule                      = "0 1 * * *" # Daily at 1 AM
+    successful_jobs_history_limit = 3
+    failed_jobs_history_limit     = 1
+
+    job_template {
+      metadata {
+        labels = {
+          app = "radarr-backup"
+        }
+      }
+
+      spec {
+        template {
+          metadata {
+            labels = {
+              app = "radarr-backup"
+            }
+          }
+
+          spec {
+            service_account_name = "backup"
+            restart_policy       = "OnFailure"
+
+            container {
+              name    = "radarr-backup"
+              image   = "alpine:3.18"
+              command = ["/bin/sh"]
+              args    = ["/scripts/radarr-backup.sh"]
+
+              env {
+                name  = "BACKUP_DIR"
+                value = "/backup"
+              }
+
+              volume_mount {
+                name       = "backup-scripts"
+                mount_path = "/scripts"
+              }
+
+              volume_mount {
+                name       = "radarr-config"
+                mount_path = "/config"
+                read_only  = true
+              }
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+
+              resources {
+                requests = {
+                  cpu    = "100m"
+                  memory = "128Mi"
+                }
+                limits = {
+                  cpu    = "500m"
+                  memory = "512Mi"
+                }
+              }
+            }
+
+            volume {
+              name = "backup-scripts"
+              config_map {
+                name         = "backup-scripts"
+                default_mode = "0755"
+              }
+            }
+
+            volume {
+              name = "radarr-config"
+              nfs {
+                server = "192.168.0.2"
+                path   = "/volume1/Apps/radarr"
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              nfs {
+                server = "192.168.0.2"
+                path   = "/volume1/Apps/kube-backups"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# ETCD Backup CronJob (kube-backups location)
+resource "kubernetes_cron_job_v1" "etcd_backup_kube" {
+  depends_on = [kubernetes_config_map.backup_scripts, kubernetes_service_account.backup]
+
+  metadata {
+    name      = "etcd-backup-kube"
+    namespace = "backup"
+    labels = {
+      app = "etcd-backup-kube"
+    }
+  }
+
+  spec {
+    schedule                      = "0 2 * * *" # Daily at 2 AM
+    successful_jobs_history_limit = 3
+    failed_jobs_history_limit     = 1
+
+    job_template {
+      metadata {
+        labels = {
+          app = "etcd-backup-kube"
+        }
+      }
+
+      spec {
+        template {
+          metadata {
+            labels = {
+              app = "etcd-backup-kube"
+            }
+          }
+
+          spec {
+            service_account_name = "backup"
+            restart_policy       = "OnFailure"
+
+            host_network = true
+            node_selector = {
+              "node-role.kubernetes.io/control-plane" = ""
+            }
+
+            toleration {
+              key      = "node-role.kubernetes.io/control-plane"
+              operator = "Exists"
+              effect   = "NoSchedule"
+            }
+
+            container {
+              name    = "etcd-backup"
+              image   = "k8s.gcr.io/etcd:3.5.9-0"
+              command = ["/bin/sh"]
+              args    = ["/scripts/etcd-backup-kube.sh"]
+
+              env {
+                name  = "ETCDCTL_API"
+                value = "3"
+              }
+
+              env {
+                name  = "BACKUP_DIR"
+                value = "/backup"
+              }
+
+              env {
+                name = "NODE_NAME"
+                value_from {
+                  field_ref {
+                    field_path = "spec.nodeName"
+                  }
+                }
+              }
+
+              volume_mount {
+                name       = "backup-scripts"
+                mount_path = "/scripts"
+              }
+
+              volume_mount {
+                name       = "etcd-certs"
+                mount_path = "/etc/kubernetes/pki/etcd"
+                read_only  = true
+              }
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+
+              resources {
+                requests = {
+                  cpu    = "100m"
+                  memory = "128Mi"
+                }
+                limits = {
+                  cpu    = "500m"
+                  memory = "512Mi"
+                }
+              }
+            }
+
+            volume {
+              name = "backup-scripts"
+              config_map {
+                name         = "backup-scripts"
+                default_mode = "0755"
+              }
+            }
+
+            volume {
+              name = "etcd-certs"
+              host_path {
+                path = "/etc/kubernetes/pki/etcd"
+                type = "Directory"
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              nfs {
+                server = "192.168.0.2"
+                path   = "/volume1/Apps/kube-backups"
+              }
+            }
+          }
         }
       }
     }
