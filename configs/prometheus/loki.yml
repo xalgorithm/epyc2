@@ -16,6 +16,10 @@ common:
       store: inmemory
       
 query_range:
+  # Queue limits - handle multiple concurrent dashboard queries
+  max_outstanding_per_tenant: 4096  # Increased from default 100
+  parallelism: 32                    # Number of parallel query executions
+  
   results_cache:
     cache:
       enable_fifocache: true
@@ -62,6 +66,13 @@ limits_config:
   # Cache settings
   max_cache_freshness_per_query: 10m
 
+frontend:
+  max_outstanding_per_tenant: 4096  # Match query_range setting
+  compress_responses: true
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 4096  # Handle burst dashboard loads
+  
 querier:
   max_concurrent: 100
   query_timeout: 5m
