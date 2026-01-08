@@ -574,6 +574,12 @@ resource "kubernetes_deployment" "prometheus" {
             mount_path = "/prometheus/"
           }
 
+          volume_mount {
+            name       = "ha-token"
+            mount_path = "/etc/prometheus/secrets"
+            read_only  = true
+          }
+
           security_context {
             run_as_user  = 65534
             run_as_group = 65534
@@ -596,6 +602,19 @@ resource "kubernetes_deployment" "prometheus" {
           name = "prometheus-storage-volume"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.prometheus_storage[0].metadata[0].name
+          }
+        }
+
+        volume {
+          name = "ha-token"
+          secret {
+            secret_name  = "home-assistant-token"
+            optional     = true
+            default_mode = "0400"
+            items {
+              key  = "token"
+              path = "ha-token"
+            }
           }
         }
       }
@@ -689,12 +708,12 @@ resource "kubernetes_deployment" "loki" {
 
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "128Mi"
-            }
-            limits = {
               cpu    = "500m"
               memory = "1Gi"
+            }
+            limits = {
+              cpu    = "2000m"
+              memory = "4Gi"
             }
           }
 
@@ -836,6 +855,12 @@ resource "kubernetes_daemonset" "promtail" {
             name           = "http-metrics"
           }
 
+          port {
+            container_port = 1514
+            name           = "syslog-tcp"
+            protocol       = "TCP"
+          }
+
           resources {
             requests = {
               cpu    = "100m"
@@ -917,6 +942,42 @@ resource "kubernetes_daemonset" "promtail" {
         }
       }
     }
+  }
+}
+
+# Promtail Service (LoadBalancer for OPNsense syslog)
+resource "kubernetes_service" "promtail_syslog" {
+  depends_on = [kubernetes_daemonset.promtail]
+
+  metadata {
+    name      = "promtail-syslog"
+    namespace = "monitoring"
+    labels = {
+      app = "promtail"
+    }
+    annotations = {
+      "metallb.universe.tf/allow-shared-ip" = "syslog-services"
+    }
+  }
+
+  spec {
+    type = "LoadBalancer"
+
+    load_balancer_ip = var.syslog_ip
+
+    port {
+      name        = "syslog-tcp"
+      port        = 1514
+      target_port = 1514
+      protocol    = "TCP"
+    }
+
+    selector = {
+      app = "promtail"
+    }
+
+    # Route to a single pod (not all DaemonSet pods)
+    session_affinity = "ClientIP"
   }
 }
 

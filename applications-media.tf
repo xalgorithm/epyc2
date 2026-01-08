@@ -645,12 +645,12 @@ resource "kubernetes_deployment" "radarr" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "150m"
-              memory = "768Mi"
+              cpu    = "1000m"
+              memory = "4Gi"
             }
             limits = {
-              cpu    = "1500m"
-              memory = "1.5Gi"
+              cpu    = "2000m"
+              memory = "8Gi"
             }
           }
 
@@ -715,7 +715,7 @@ resource "kubernetes_deployment" "radarr" {
           name = "radarr-downloads"
           nfs {
             server = "192.168.0.2"
-            path   = "/volume2/Downloads/sabnzbd/completed/movies"
+            path   = "/volume2/Downloads/sabnzbd/movies"
           }
         }
       }

@@ -143,12 +143,13 @@ resource "proxmox_virtual_environment_vm" "bumblebee" {
 
   # VM Configuration
   cpu {
-    cores = 8
-    type  = "host"
+    cores   = 4
+    sockets = 2
+    type    = "host"
   }
 
   memory {
-    dedicated = 16384
+    dedicated = 32768 # 32GB
   }
 
   # SCSI Controller for iothread support
@@ -210,12 +211,13 @@ resource "proxmox_virtual_environment_vm" "prime" {
 
   # VM Configuration
   cpu {
-    cores = 8
-    type  = "host"
+    cores   = 4
+    sockets = 2
+    type    = "host"
   }
 
   memory {
-    dedicated = 16384
+    dedicated = 32768 # 32GB
   }
 
   # SCSI Controller for iothread support
@@ -277,12 +279,13 @@ resource "proxmox_virtual_environment_vm" "wheeljack" {
 
   # VM Configuration
   cpu {
-    cores = 8
-    type  = "host"
+    cores   = 4
+    sockets = 2
+    type    = "host"
   }
 
   memory {
-    dedicated = 16384
+    dedicated = 32768 # 32GB
   }
 
   # SCSI Controller for iothread support

@@ -195,7 +195,7 @@ resource "kubernetes_service" "syslog_ng" {
       app = "syslog-ng"
     }
     annotations = {
-      "metallb.universe.tf/allow-shared-ip" = "monitoring-services"
+      "metallb.universe.tf/allow-shared-ip" = "syslog-services"
     }
   }
 

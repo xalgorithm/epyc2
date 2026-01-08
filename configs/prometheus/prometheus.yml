@@ -123,10 +123,10 @@ scrape_configs:
         labels:
           instance: 'home-assistant'
           environment: 'homelab'
-    # Uncomment if you need authentication (most HA setups require this)
-    # authorization:
-    #   type: Bearer
-    #   credentials: ${HOME_ASSISTANT_TOKEN}
+    # Bearer token authentication for Home Assistant
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/secrets/ha-token
 
   # Proxmox VE metrics scraping
   - job_name: 'proxmox'
