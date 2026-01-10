@@ -645,12 +645,12 @@ resource "kubernetes_deployment" "radarr" {
           # Resource limits
           resources {
             requests = {
-              cpu    = "1000m"
-              memory = "4Gi"
+              cpu    = "2000m"
+              memory = "6Gi"
             }
             limits = {
               cpu    = "2000m"
-              memory = "8Gi"
+              memory = "12Gi"
             }
           }
 

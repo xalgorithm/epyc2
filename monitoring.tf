@@ -152,6 +152,9 @@ resource "kubernetes_config_map" "grafana_dashboards" {
 
     # Home Assistant Smart Home Monitoring
     "home-assistant-dashboard.json" = file("${path.module}/configs/grafana/home-assistant-dashboard.json")
+
+    # TrueNAS Storage Monitoring
+    "truenas-dashboard.json" = file("${path.module}/configs/grafana/truenas-dashboard.json")
   }
 }
 

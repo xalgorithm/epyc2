@@ -145,5 +145,18 @@ scrape_configs:
       cluster: ['1']
       node: ['1']
 
+  # TrueNAS SCALE metrics scraping (node_exporter)
+  - job_name: 'truenas'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets:
+          - '192.168.0.2:9100'    # TrueNAS 1 (Primary NFS)
+          - '192.168.0.11:9100'   # TrueNAS 2 (Media Storage)
+        labels:
+          environment: 'homelab'
+          service: 'storage'
+          cluster: 'homelab'
+
 remote_write:
   - url: http://mimir-distributor.monitoring.svc.cluster.local:8080/api/v1/push
