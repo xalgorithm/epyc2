@@ -82,7 +82,6 @@ resource "kubernetes_config_map" "backup_scripts" {
     "etcd-backup-kube.sh"            = file("${path.module}/scripts/backup/etcd-backup-kube.sh")
     "k3s-etcd-backup.sh"             = file("${path.module}/scripts/backup/k3s-etcd-backup.sh")
     "data-backup.sh"                 = file("${path.module}/scripts/backup/data-backup.sh")
-    "mylar-backup.sh"                = file("${path.module}/scripts/backup/mylar-backup.sh")
     "radarr-backup.sh"               = file("${path.module}/scripts/backup/radarr-backup.sh")
     "manual-backup-comprehensive.sh" = file("${path.module}/scripts/backup/manual-backup-comprehensive.sh")
     "test-backup-connectivity.sh"    = file("${path.module}/scripts/maintenance/test-backup-connectivity.sh")
@@ -94,7 +93,6 @@ resource "kubernetes_config_map" "backup_scripts" {
     # Restore scripts
     "restore-etcd.sh"      = file("${path.module}/scripts/backup/restore-etcd.sh")
     "restore-etcd-kube.sh" = file("${path.module}/scripts/backup/restore-etcd-kube.sh")
-    "restore-mylar.sh"     = file("${path.module}/scripts/backup/restore-mylar.sh")
     "restore-radarr.sh"    = file("${path.module}/scripts/backup/restore-radarr.sh")
     "restore-grafana.sh"   = file("${path.module}/scripts/backup/restore-grafana.sh")
     "restore-prometheus.sh" = file("${path.module}/scripts/backup/restore-prometheus.sh")
@@ -727,111 +725,6 @@ resource "kubernetes_deployment" "backup_metrics" {
 # =============================================================================
 # Application Backups for Media Services
 # =============================================================================
-
-# Mylar Backup CronJob
-resource "kubernetes_cron_job_v1" "mylar_backup" {
-  depends_on = [kubernetes_config_map.backup_scripts, kubernetes_service_account.backup]
-
-  metadata {
-    name      = "mylar-backup"
-    namespace = "backup"
-    labels = {
-      app = "mylar-backup"
-    }
-  }
-
-  spec {
-    schedule                      = "0 1 * * *" # Daily at 1 AM
-    successful_jobs_history_limit = 3
-    failed_jobs_history_limit     = 1
-
-    job_template {
-      metadata {
-        labels = {
-          app = "mylar-backup"
-        }
-      }
-
-      spec {
-        template {
-          metadata {
-            labels = {
-              app = "mylar-backup"
-            }
-          }
-
-          spec {
-            service_account_name = "backup"
-            restart_policy       = "OnFailure"
-
-            container {
-              name    = "mylar-backup"
-              image   = "alpine:3.18"
-              command = ["/bin/sh"]
-              args    = ["/scripts/mylar-backup.sh"]
-
-              env {
-                name  = "BACKUP_DIR"
-                value = "/backup"
-              }
-
-              volume_mount {
-                name       = "backup-scripts"
-                mount_path = "/scripts"
-              }
-
-              volume_mount {
-                name       = "mylar-config"
-                mount_path = "/config"
-                read_only  = true
-              }
-
-              volume_mount {
-                name       = "backup-storage"
-                mount_path = "/backup"
-              }
-
-              resources {
-                requests = {
-                  cpu    = "100m"
-                  memory = "128Mi"
-                }
-                limits = {
-                  cpu    = "500m"
-                  memory = "512Mi"
-                }
-              }
-            }
-
-            volume {
-              name = "backup-scripts"
-              config_map {
-                name         = "backup-scripts"
-                default_mode = "0755"
-              }
-            }
-
-            volume {
-              name = "mylar-config"
-              nfs {
-                server = "192.168.0.2"
-                path   = "/volume1/Apps/mylar"
-              }
-            }
-
-            volume {
-              name = "backup-storage"
-              nfs {
-                server = "192.168.0.2"
-                path   = "/volume1/Apps/kube-backups"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 # Radarr Backup CronJob
 resource "kubernetes_cron_job_v1" "radarr_backup" {

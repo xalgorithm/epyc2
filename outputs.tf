@@ -181,11 +181,6 @@ output "service_endpoints" {
         url    = "http://${var.mimir_host}"
         ip     = var.ingress_ip
       }
-      mylar = {
-        domain = var.mylar_host
-        url    = "http://${var.mylar_host}"
-        ip     = var.ingress_ip
-      }
       n8n = {
         domain   = "automate.home"
         url      = "http://automate.home"
@@ -194,7 +189,7 @@ output "service_endpoints" {
         password = "automate"
       }
     }
-    dns_configuration = "Add to /etc/hosts: ${var.ingress_ip}  ${var.grafana_host} ${var.prometheus_host} ${var.loki_host} ${var.mimir_host} ${var.mylar_host} automate.home"
+    dns_configuration = "Add to /etc/hosts: ${var.ingress_ip}  ${var.grafana_host} ${var.prometheus_host} ${var.loki_host} ${var.mimir_host} automate.home"
   }
 }
 

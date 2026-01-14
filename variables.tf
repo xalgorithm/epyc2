@@ -161,12 +161,6 @@ variable "mimir_host" {
   default     = "mimir.home"
 }
 
-variable "mylar_host" {
-  description = "Hostname for Mylar Ingress"
-  type        = string
-  default     = "mylar.home"
-}
-
 variable "sabnzbd_host" {
   description = "Hostname for SABnzbd Ingress"
   type        = string

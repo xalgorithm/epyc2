@@ -173,40 +173,6 @@ resource "kubernetes_ingress_v1" "mimir" {
 # Application Ingress Resources
 # =============================================================================
 
-# Mylar Ingress
-resource "kubernetes_ingress_v1" "mylar" {
-  metadata {
-    name      = "mylar"
-    namespace = "media"
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = var.mylar_host
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.mylar.metadata[0].name
-              port {
-                number = 8090
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  depends_on = [
-    helm_release.ingress_nginx,
-    kubernetes_service.mylar
-  ]
-}
-
 # N8N Ingress
 resource "kubernetes_ingress_v1" "n8n" {
   depends_on = [kubernetes_service.n8n]
