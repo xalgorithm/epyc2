@@ -179,6 +179,40 @@ variable "radarr_host" {
   default     = "radarr.home"
 }
 
+variable "nest_host" {
+  description = "Hostname for Nest Data Ingress"
+  type        = string
+  default     = "nest.home"
+}
+
+# =============================================================================
+# Registry Configuration
+# =============================================================================
+
+variable "registry_host" {
+  description = "Container registry hostname (for in-cluster access)"
+  type        = string
+  default     = "registry.registry.svc.cluster.local"
+}
+
+variable "registry_port" {
+  description = "Container registry port (for in-cluster access)"
+  type        = string
+  default     = "5000"
+}
+
+variable "registry_node_ip" {
+  description = "Node IP for registry access (for image pulls from nodes)"
+  type        = string
+  default     = "192.168.0.32"
+}
+
+variable "registry_node_port" {
+  description = "NodePort for registry access"
+  type        = string
+  default     = "30500"
+}
+
 # =============================================================================
 # Docker Hub Configuration
 # =============================================================================

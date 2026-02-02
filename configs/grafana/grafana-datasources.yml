@@ -16,3 +16,5 @@ datasources:
   access: proxy
   url: http://loki:3100
   editable: true
+# Note: Nest PostgreSQL datasource must be configured manually in Grafana UI
+# after deployment, as the password is stored in configs/nest/.env

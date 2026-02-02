@@ -155,6 +155,9 @@ resource "kubernetes_config_map" "grafana_dashboards" {
 
     # TrueNAS Storage Monitoring
     "truenas-dashboard.json" = file("${path.module}/configs/grafana/truenas-dashboard.json")
+
+    # Nest Thermostat Monitoring
+    "nest-thermostat-dashboard.json" = file("${path.module}/configs/grafana/nest-thermostat-dashboard.json")
   }
 }
 
