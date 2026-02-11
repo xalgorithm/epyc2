@@ -67,57 +67,54 @@ nfs_backup_path = "/data/kubernetes/backups"
 ## 📁 Project Structure
 
 ```
-├── docs/                          # Documentation
-│   ├── deployment/               # Deployment guides
-│   ├── backup/                   # Backup documentation
-│   ├── monitoring/               # Monitoring setup
-│   ├── troubleshooting/          # Troubleshooting guides
-│   └── TERRAFORM_STRUCTURE.md    # Terraform organization guide
-├── scripts/                      # Automation scripts
-│   ├── deployment/               # Deployment scripts
-│   ├── backup/                   # Backup and restore scripts
-│   ├── maintenance/              # Maintenance scripts
-│   └── troubleshooting/          # Troubleshooting scripts
-├── configs/                      # Configuration files
-│   ├── grafana/                  # Grafana dashboards
-│   ├── prometheus/               # Prometheus configs
-│   └── backup/                   # Backup configurations
-├── *.tf                          # Terraform configuration files
-└── terraform.tfvars              # Environment variables
+├── terraform/                    # Terraform infrastructure code
+│   ├── infrastructure/          # Proxmox VMs, networking
+│   ├── kubernetes/              # K8s clusters, storage, ingress
+│   ├── applications/            # Application deployments
+│   ├── platform/                # Monitoring, backup, logging
+│   ├── main.tf                  # Main configuration
+│   ├── providers.tf             # Provider configurations
+│   ├── variables.tf             # Variable definitions
+│   ├── outputs.tf               # Output definitions
+│   └── terraform.tfvars         # Environment variables
+├── docs/                        # Documentation
+│   ├── deployment/              # Deployment guides
+│   ├── backup/                  # Backup documentation
+│   ├── monitoring/              # Monitoring setup
+│   └── troubleshooting/         # Troubleshooting guides
+├── scripts/                     # Automation scripts
+│   ├── deployment/              # Deployment scripts
+│   ├── backup/                  # Backup and restore scripts
+│   ├── maintenance/             # Maintenance scripts
+│   └── troubleshooting/         # Troubleshooting scripts
+├── configs/                     # Configuration files
+│   ├── grafana/                 # Grafana dashboards
+│   ├── prometheus/              # Prometheus configs
+│   └── backup/                  # Backup configurations
+└── README.md                    # This file
 ```
 
 ## 🔧 Components
 
 ### Infrastructure (Terraform)
 
-The Terraform configuration is organized following best practices with clear separation of concerns:
+The Terraform configuration is organized into logical subdirectories for better maintainability:
 
-#### Core Configuration
-- **`versions.tf`**: Terraform and provider version requirements
-- **`providers.tf`**: Provider configurations
+#### Directory Structure
+- **`infrastructure/`**: Proxmox VMs, networking, and base infrastructure
+- **`kubernetes/`**: Kubernetes clusters, storage, and ingress configuration
+- **`applications/`**: Application deployments (Immich, media apps, automation)
+- **`platform/`**: Platform services (monitoring, backup, logging)
+
+#### Core Files
+- **`main.tf`**: Main configuration and resource orchestration
+- **`providers.tf`**: Provider configurations (Proxmox, Kubernetes, Helm)
 - **`variables.tf`**: Input variable declarations
 - **`outputs.tf`**: Output value declarations
-- **`backend.tf`**: Backend configuration
+- **`backend.tf`**: Backend configuration for state management
+- **`versions.tf`**: Terraform and provider version constraints
 
-#### Infrastructure Layer
-- **`infrastructure-proxmox.tf`**: VM definitions and provisioning
-- **`infrastructure-network.tf`**: MetalLB and Ingress controller
-
-#### Kubernetes Platform
-- **`kubernetes-cluster.tf`**: Cluster bootstrapping and setup
-- **`kubernetes-storage.tf`**: NFS storage configuration
-- **`kubernetes-ingress.tf`**: Ingress resource definitions
-
-#### Monitoring & Backup
-- **`monitoring.tf`**: Prometheus, Grafana, Loki, Mimir stack
-- **`backup.tf`**: Backup system and CronJobs
-- **`opnsense-logging.tf`**: OPNsense log integration
-
-#### Applications
-- **`applications-media.tf`**: Media applications (Mylar)
-- **`applications-automation.tf`**: Automation tools (N8N)
-
-See [TERRAFORM_STRUCTURE.md](docs/TERRAFORM_STRUCTURE.md) for detailed information
+See [terraform/README.md](terraform/README.md) for detailed structure documentation.
 
 ### Key Features
 
@@ -164,14 +161,16 @@ See [TERRAFORM_STRUCTURE.md](docs/TERRAFORM_STRUCTURE.md) for detailed informati
 ### Deployment
 
 ```bash
+# Navigate to terraform directory
+cd terraform
+
 # Full stack deployment
+terraform init
+terraform plan
+terraform apply
+
+# Or use deployment scripts from root
 ./scripts/deployment/deploy-full-stack.sh
-
-# Step-by-step deployment
-./scripts/deployment/deploy-step-by-step.sh
-
-# Pre-flight checks
-./scripts/deployment/pre-flight-check.sh
 ```
 
 ### Backup Operations

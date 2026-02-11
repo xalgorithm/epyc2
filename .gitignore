@@ -136,3 +136,8 @@ override.tf.json
 # NFS mount point (do not commit)
 /mnt/nfs-k8s/
 /Volumes/nfs-k8s/
+
+# antigravity agent files
+.agent
+
+nest_data/

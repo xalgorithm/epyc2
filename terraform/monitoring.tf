@@ -115,7 +115,7 @@ resource "kubernetes_config_map" "grafana_dashboard_provisioning" {
   }
 
   data = {
-    "dashboards.yml" = file("${path.module}/configs/grafana/grafana-dashboards.yml")
+    "dashboards.yml" = file("${path.root}/../configs/grafana/grafana-dashboards.yml")
   }
 }
 
@@ -130,34 +130,37 @@ resource "kubernetes_config_map" "grafana_dashboards" {
 
   data = {
     # Original dashboards
-    "homelab-dashboard.json"       = file("${path.module}/configs/grafana/homelab-dashboard.json")
-    "prometheus-dashboard.json"    = file("${path.module}/configs/grafana/prometheus-dashboard.json")
-    "loki-logs-dashboard.json"     = file("${path.module}/configs/grafana/loki-logs-dashboard.json")
-    "mimir-dashboard.json"         = file("${path.module}/configs/grafana/mimir-dashboard.json")
-    "node-exporter-dashboard.json" = file("${path.module}/configs/grafana/node-exporter-dashboard.json")
-    "proxmox-dashboard.json"       = file("${path.module}/configs/grafana/proxmox-dashboard.json")
-    "backup-dashboard.json"        = file("${path.module}/configs/grafana/backup-dashboard.json")
+    "homelab-dashboard.json"       = file("${path.root}/../configs/grafana/homelab-dashboard.json")
+    "prometheus-dashboard.json"    = file("${path.root}/../configs/grafana/prometheus-dashboard.json")
+    "loki-logs-dashboard.json"     = file("${path.root}/../configs/grafana/loki-logs-dashboard.json")
+    "mimir-dashboard.json"         = file("${path.root}/../configs/grafana/mimir-dashboard.json")
+    "node-exporter-dashboard.json" = file("${path.root}/../configs/grafana/node-exporter-dashboard.json")
+    "proxmox-dashboard.json"       = file("${path.root}/../configs/grafana/proxmox-dashboard.json")
+    "backup-dashboard.json"        = file("${path.root}/../configs/grafana/backup-dashboard.json")
 
     # Comprehensive Kubernetes dashboards
-    "kubernetes-cluster-overview.json"    = file("${path.module}/configs/grafana/kubernetes-cluster-overview.json")
-    "kubernetes-pods-workloads.json"      = file("${path.module}/configs/grafana/kubernetes-pods-workloads.json")
-    "kubernetes-logs-analysis.json"       = file("${path.module}/configs/grafana/kubernetes-logs-analysis.json")
-    "kubernetes-resource-monitoring.json" = file("${path.module}/configs/grafana/kubernetes-resource-monitoring.json")
-    "kubernetes-events-alerts.json"       = file("${path.module}/configs/grafana/kubernetes-events-alerts.json")
+    "kubernetes-cluster-overview.json"    = file("${path.root}/../configs/grafana/kubernetes-cluster-overview.json")
+    "kubernetes-pods-workloads.json"      = file("${path.root}/../configs/grafana/kubernetes-pods-workloads.json")
+    "kubernetes-logs-analysis.json"       = file("${path.root}/../configs/grafana/kubernetes-logs-analysis.json")
+    "kubernetes-resource-monitoring.json" = file("${path.root}/../configs/grafana/kubernetes-resource-monitoring.json")
+    "kubernetes-events-alerts.json"       = file("${path.root}/../configs/grafana/kubernetes-events-alerts.json")
 
     # OPNsense Firewall & Network Monitoring Dashboards
-    "opnsense-firewall-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-firewall-dashboard.json")
-    "opnsense-bandwidth-dashboard.json" = file("${path.module}/configs/grafana/opnsense-bandwidth-dashboard.json")
-    "opnsense-security-dashboard.json"  = file("${path.module}/configs/grafana/opnsense-security-dashboard.json")
+    "opnsense-firewall-dashboard.json"  = file("${path.root}/../configs/grafana/opnsense-firewall-dashboard.json")
+    "opnsense-bandwidth-dashboard.json" = file("${path.root}/../configs/grafana/opnsense-bandwidth-dashboard.json")
+    "opnsense-security-dashboard.json"  = file("${path.root}/../configs/grafana/opnsense-security-dashboard.json")
 
     # Home Assistant Smart Home Monitoring
-    "home-assistant-dashboard.json" = file("${path.module}/configs/grafana/home-assistant-dashboard.json")
+    "home-assistant-dashboard.json" = file("${path.root}/../configs/grafana/home-assistant-dashboard.json")
 
     # TrueNAS Storage Monitoring
-    "truenas-dashboard.json" = file("${path.module}/configs/grafana/truenas-dashboard.json")
+    "truenas-dashboard.json" = file("${path.root}/../configs/grafana/truenas-dashboard.json")
 
     # Nest Thermostat Monitoring
-    "nest-thermostat-dashboard.json" = file("${path.module}/configs/grafana/nest-thermostat-dashboard.json")
+    "nest-thermostat-dashboard.json" = file("${path.root}/../configs/grafana/nest-thermostat-dashboard.json")
+
+    # Immich Photo Management
+    "immich-dashboard.json" = file("${path.root}/../configs/grafana/immich-dashboard.json")
   }
 }
 
@@ -228,7 +231,7 @@ resource "kubernetes_config_map" "prometheus_config" {
   }
 
   data = {
-    "prometheus.yml" = file("${path.module}/configs/prometheus/prometheus.yml")
+    "prometheus.yml" = file("${path.root}/../configs/prometheus/prometheus.yml")
   }
 }
 
@@ -242,7 +245,7 @@ resource "kubernetes_config_map" "mimir_config" {
   }
 
   data = {
-    "mimir.yml" = file("${path.module}/configs/prometheus/mimir.yml")
+    "mimir.yml" = file("${path.root}/../configs/prometheus/mimir.yml")
   }
 }
 
@@ -256,7 +259,7 @@ resource "kubernetes_config_map" "loki_config" {
   }
 
   data = {
-    "loki.yml" = file("${path.module}/configs/prometheus/loki.yml")
+    "loki.yml" = file("${path.root}/../configs/prometheus/loki.yml")
   }
 }
 
@@ -316,7 +319,7 @@ resource "kubernetes_config_map" "promtail_config" {
   }
 
   data = {
-    "promtail.yml" = file("${path.module}/configs/prometheus/promtail.yml")
+    "promtail.yml" = file("${path.root}/../configs/prometheus/promtail.yml")
   }
 }
 
@@ -330,7 +333,7 @@ resource "kubernetes_config_map" "grafana_config" {
   }
 
   data = {
-    "grafana.ini" = file("${path.module}/configs/grafana/grafana.ini")
+    "grafana.ini" = file("${path.root}/../configs/grafana/grafana.ini")
   }
 }
 
@@ -343,7 +346,7 @@ resource "kubernetes_config_map" "grafana_datasources" {
   }
 
   data = {
-    "datasources.yml" = file("${path.module}/configs/grafana/grafana-datasources.yml")
+    "datasources.yml" = file("${path.root}/../configs/grafana/grafana-datasources.yml")
   }
 }
 

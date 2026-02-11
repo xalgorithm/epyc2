@@ -78,29 +78,33 @@ resource "kubernetes_config_map" "backup_scripts" {
   }
 
   data = {
-    "etcd-backup.sh"                 = file("${path.module}/scripts/backup/etcd-backup.sh")
-    "etcd-backup-kube.sh"            = file("${path.module}/scripts/backup/etcd-backup-kube.sh")
-    "k3s-etcd-backup.sh"             = file("${path.module}/scripts/backup/k3s-etcd-backup.sh")
-    "data-backup.sh"                 = file("${path.module}/scripts/backup/data-backup.sh")
-    "radarr-backup.sh"               = file("${path.module}/scripts/backup/radarr-backup.sh")
-    "manual-backup-comprehensive.sh" = file("${path.module}/scripts/backup/manual-backup-comprehensive.sh")
-    "test-backup-connectivity.sh"    = file("${path.module}/scripts/maintenance/test-backup-connectivity.sh")
-    "test-nfs-permissions.sh"        = file("${path.module}/scripts/maintenance/test-nfs-permissions.sh")
-    "fix-kubeconfig-secret.sh"       = file("${path.module}/scripts/troubleshooting/fix-kubeconfig-secret.sh")
-    "diagnose-nfs-access.sh"         = file("${path.module}/scripts/troubleshooting/diagnose-nfs-access.sh")
-    "fix-nfs-permissions.sh"         = file("${path.module}/scripts/maintenance/fix-nfs-permissions.sh")
+    "etcd-backup.sh"                 = file("${path.root}/../scripts/backup/etcd-backup.sh")
+    "etcd-backup-kube.sh"            = file("${path.root}/../scripts/backup/etcd-backup-kube.sh")
+    "k3s-etcd-backup.sh"             = file("${path.root}/../scripts/backup/k3s-etcd-backup.sh")
+    "data-backup.sh"                 = file("${path.root}/../scripts/backup/data-backup.sh")
+    "radarr-backup.sh"               = file("${path.root}/../scripts/backup/radarr-backup.sh")
+    "manual-backup-comprehensive.sh" = file("${path.root}/../scripts/backup/manual-backup-comprehensive.sh")
+    "test-backup-connectivity.sh"    = file("${path.root}/../scripts/maintenance/test-backup-connectivity.sh")
+    "test-nfs-permissions.sh"        = file("${path.root}/../scripts/maintenance/test-nfs-permissions.sh")
+    "fix-kubeconfig-secret.sh"       = file("${path.root}/../scripts/troubleshooting/fix-kubeconfig-secret.sh")
+    "diagnose-nfs-access.sh"         = file("${path.root}/../scripts/troubleshooting/diagnose-nfs-access.sh")
+    "fix-nfs-permissions.sh"         = file("${path.root}/../scripts/maintenance/fix-nfs-permissions.sh")
     
-    # Restore scripts
-    "restore-etcd.sh"      = file("${path.module}/scripts/backup/restore-etcd.sh")
-    "restore-etcd-kube.sh" = file("${path.module}/scripts/backup/restore-etcd-kube.sh")
-    "restore-radarr.sh"    = file("${path.module}/scripts/backup/restore-radarr.sh")
-    "restore-grafana.sh"   = file("${path.module}/scripts/backup/restore-grafana.sh")
-    "restore-prometheus.sh" = file("${path.module}/scripts/backup/restore-prometheus.sh")
-    "restore-loki.sh"      = file("${path.module}/scripts/backup/restore-loki.sh")
-    "restore-mimir.sh"     = file("${path.module}/scripts/backup/restore-mimir.sh")
+    # Immich backup scripts
+    "immich-db-backup.sh"     = file("${path.root}/../scripts/backup/immich-db-backup.sh")
+    "immich-upload-backup.sh" = file("${path.root}/../scripts/backup/immich-upload-backup.sh")
 
-    "backup-file-metrics.sh" = file("${path.module}/scripts/backup/backup-file-metrics.sh")
-    "backup-cleanup.sh"      = file("${path.module}/scripts/backup/backup-cleanup.sh")
+    # Restore scripts
+    "restore-etcd.sh"      = file("${path.root}/../scripts/backup/restore-etcd.sh")
+    "restore-etcd-kube.sh" = file("${path.root}/../scripts/backup/restore-etcd-kube.sh")
+    "restore-radarr.sh"    = file("${path.root}/../scripts/backup/restore-radarr.sh")
+    "restore-grafana.sh"   = file("${path.root}/../scripts/backup/restore-grafana.sh")
+    "restore-prometheus.sh" = file("${path.root}/../scripts/backup/restore-prometheus.sh")
+    "restore-loki.sh"      = file("${path.root}/../scripts/backup/restore-loki.sh")
+    "restore-mimir.sh"     = file("${path.root}/../scripts/backup/restore-mimir.sh")
+
+    "backup-file-metrics.sh" = file("${path.root}/../scripts/backup/backup-file-metrics.sh")
+    "backup-cleanup.sh"      = file("${path.root}/../scripts/backup/backup-cleanup.sh")
   }
 }
 

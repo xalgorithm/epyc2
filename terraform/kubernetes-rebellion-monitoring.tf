@@ -18,8 +18,8 @@ resource "kubernetes_config_map" "rebellion_grafana_dashboards" {
   }
 
   data = {
-    "rebellion-cluster-dashboard.json"  = file("${path.module}/configs/grafana/rebellion-cluster-dashboard.json")
-    "rebellion-istio-dashboard.json"    = file("${path.module}/configs/grafana/rebellion-istio-dashboard.json")
+    "rebellion-cluster-dashboard.json"  = file("${path.root}/../configs/grafana/rebellion-cluster-dashboard.json")
+    "rebellion-istio-dashboard.json"    = file("${path.root}/../configs/grafana/rebellion-istio-dashboard.json")
   }
 
   depends_on = [

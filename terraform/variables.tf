@@ -394,3 +394,19 @@ variable "home_assistant_api_token" {
   sensitive   = true
 }
 
+
+# =============================================================================
+# Immich Configuration
+# =============================================================================
+
+variable "immich_host" {
+  description = "Hostname for Immich Ingress"
+  type        = string
+  default     = "immich.home"
+}
+
+variable "immich_db_password" {
+  description = "Password for the Immich PostgreSQL database"
+  type        = string
+  sensitive   = true
+}
